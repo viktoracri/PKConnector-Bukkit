@@ -1,0 +1,27 @@
+name: PKConnector
+version: 0.2
+author: Viktoracri
+website: https://acri.dev
+main: dev.acri.pkconnector.bukkit.Main
+
+commands:
+  togglechatg:
+    description: Toggle whether or not you see the global chat.
+  gmsg:
+    description: Message players globally
+  chat:
+    description: Set your current chat channel
+  cg:
+    description: Chat global
+  cn:
+    description: Chat normal
+  cs:
+    description: Chat staff
+  cv:
+    description: Chat veteran
+  gr:
+    description: Reply to a message globally
+  find:
+    description: Find a player
+  pkconnect:
+    description: Reconnect to the host server
