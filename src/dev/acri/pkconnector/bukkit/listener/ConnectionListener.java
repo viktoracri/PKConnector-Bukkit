@@ -188,7 +188,6 @@ public class ConnectionListener implements Runnable {
                     break;
                 case 0x11:
                     msg = in.readUTF().replaceAll("&", "§");
-                    msg = msg.substring(0, msg.length() - 4);
                     String a = Main.getInstance().getServer().getClass().getPackage().getName();
                     String version = a.substring(a.lastIndexOf('.') + 1);
                     if(version.equals("v1_8_R3")){

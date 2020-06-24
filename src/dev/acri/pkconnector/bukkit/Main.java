@@ -50,7 +50,7 @@ public class Main extends JavaPlugin {
 
         pkConnector = new PKConnector();
 
-        registerCommand("find", FindCommand.class);
+        registerCommand("findplayer", FindCommand.class);
         registerCommand("togglechatg", ToggleGlobalChatCommand.class);
         registerCommand("gmsg", GlobalMessageCommand.class);
         registerCommand("gr", GlobalReplyCommand.class);

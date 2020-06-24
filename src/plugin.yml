@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.2
+version: 0.3
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -21,7 +21,7 @@ commands:
     description: Chat veteran
   gr:
     description: Reply to a message globally
-  find:
+  findplayer:
     description: Find a player
   pkconnect:
     description: Reconnect to the host server
