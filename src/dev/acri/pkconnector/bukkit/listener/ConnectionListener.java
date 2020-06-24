@@ -5,13 +5,13 @@ import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
 import dev.acri.pkconnector.bukkit.commands.GlobalMessageCommand;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 public class ConnectionListener implements Runnable {
 
@@ -26,23 +26,17 @@ public class ConnectionListener implements Runnable {
     public void readInputStream(){
         try {
 
-
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(Main.getInstance().getSocket().getInputStream()));
             DataInputStream in = new DataInputStream(Main.getInstance().getSocket().getInputStream());
 
 
             int initialByte = in.readByte();
 
 
-
             if(initialByte == 0x05 || initialByte == -1 || initialByte == 0x00) return;
-
 
 
             short length = in.readShort();
 
-            //System.out.println("Length: " + length);
             byte[] b = new byte[length];
             while(in.available() < length){
                 try {
@@ -53,7 +47,6 @@ public class ConnectionListener implements Runnable {
             }
             in.readFully(b);
 
-            //System.out.println("Received 0x" + Integer.toHexString(initialByte));
 
 
             in = new DataInputStream(new ByteArrayInputStream(b));
@@ -79,7 +72,10 @@ public class ConnectionListener implements Runnable {
                     String identifier = in.readUTF();
                     String player = in.readUTF();
                     String message = in.readUTF();
-                    String finalMessage = "§8[§7" + identifier + "§8] §7" + player + " §8» §f" + message;
+                    String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
+                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{player}", player)
+                            .replaceAll("\\{message}", message);
                     for (User u : Main.getInstance().getUserList())
                         if (u.isGlobalChatEnabled()) u.getPlayer().sendMessage(finalMessage);
                     Bukkit.getConsoleSender().sendMessage("[Global Chat] " + finalMessage);
@@ -130,7 +126,9 @@ public class ConnectionListener implements Runnable {
                     String to = in.readUTF();
                     String msg = in.readUTF();
                     if(Bukkit.getPlayer(to) != null){
-                        Bukkit.getPlayer(to).sendMessage(GlobalMessageCommand.FORMAT_FROM.replace("{player}", from).replace("{message}", msg));
+                        Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
+                                .replace("{player}", from).replace("{message}", msg));
+                        Bukkit.getLogger().info(Main.getInstance().getConfiguration().getString("Message.From"));
 
                         Main.getInstance().getPkConnector().sendData(0xc, new String[]{
                                 from,
@@ -148,7 +146,8 @@ public class ConnectionListener implements Runnable {
                     if(msg.equals("")){
                         Bukkit.getPlayer(from).sendMessage("§cCouldn't find player '" + to + "'");
                     }else{
-                        Bukkit.getPlayer(from).sendMessage(GlobalMessageCommand.FORMAT_TO.replace("{player}", to).replace("{message}", msg));
+                        Bukkit.getPlayer(from).sendMessage(Main.getInstance().getConfiguration().getString("Message.To").replaceAll("&", "§")
+                                .replace("{player}", to).replace("{message}", msg));
                     }
 
                     Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
@@ -157,7 +156,10 @@ public class ConnectionListener implements Runnable {
                     identifier = in.readUTF();
                     player = in.readUTF();
                     message = in.readUTF();
-                    finalMessage = "§c§lS§4: §7[§c" + identifier + "§7] §c" + player + " §4» §f" + message;
+                    finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Staff").replaceAll("&", "§")
+                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{player}", player)
+                            .replaceAll("\\{message}", message);
                     for(User u2 : Main.getInstance().getUserList())
                         if(u2.isAccessStaffChat()) u2.getPlayer().sendMessage(finalMessage);
                     break;
@@ -165,7 +167,10 @@ public class ConnectionListener implements Runnable {
                     identifier = in.readUTF();
                     player = in.readUTF();
                     message = in.readUTF();
-                    finalMessage = "§b§lV§3: §7[§3" + identifier + "§7] §b" + player + " §3» §f" + message;
+                    finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Veteran").replaceAll("&", "§")
+                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{player}", player)
+                            .replaceAll("\\{message}", message);
                     for(User u1 : Main.getInstance().getUserList())
                         if(u1.isAccessVeteranChat()) u1.getPlayer().sendMessage(finalMessage);
                     break;
@@ -177,7 +182,7 @@ public class ConnectionListener implements Runnable {
                     else{
                         try{
                             p = Bukkit.getPlayer(UUID.fromString(user));
-                        }catch(IllegalArgumentException e){}
+                        }catch(IllegalArgumentException ignored){}
                     }
 
                     if(p != null) p.sendMessage(msg.replace("&", "§"));
@@ -199,7 +204,7 @@ public class ConnectionListener implements Runnable {
 
 
 
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
 

@@ -16,7 +16,7 @@ public class FindCommand implements TabCompleter, CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if(args.length == 0){
-            sender.sendMessage("§cUsage: /" + label + " <player>");
+            sender.sendMessage("§cUsage: /findplayer <player>");
             sender.sendMessage("§cFind what parkour server a player is playing on");
         }else if(Bukkit.getPlayer(args[0]) != null){
             sender.sendMessage("§a" + Bukkit.getPlayer(args[0]).getName() + "§6 is online on §a" + Main.getInstance().NAME);

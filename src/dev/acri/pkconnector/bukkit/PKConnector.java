@@ -1,15 +1,12 @@
 package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.listener.ConnectionListener;
-import org.apache.commons.lang.SerializationUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.libs.org.ibex.nestedvm.util.Seekable;
 
-import java.io.*;
-import java.net.ConnectException;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +56,7 @@ public class PKConnector {
     public void disconnect(){
         try {
             Main.getInstance().getSocket().close();
-        } catch (IOException | NullPointerException e) {
+        } catch (IOException | NullPointerException ignored) {
         }
     }
 

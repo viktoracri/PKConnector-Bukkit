@@ -9,6 +9,7 @@ import dev.acri.pkconnector.bukkit.version.VersionWrapper;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -36,7 +37,7 @@ public class Main extends JavaPlugin {
 
     private VersionWrapper wrapper;
 
-
+    private YamlConfiguration configuration;
 
 
     @Override
@@ -50,6 +51,17 @@ public class Main extends JavaPlugin {
 
         pkConnector = new PKConnector();
 
+        //configuration = new Utf8YamlConfiguration();
+       /* this.saveDefaultConfig();
+        try {
+            configuration.load(new File(this.getDataFolder() + "/config.yml"));
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
+
+        */
+
+
         registerCommand("findplayer", FindCommand.class);
         registerCommand("togglechatg", ToggleGlobalChatCommand.class);
         registerCommand("gmsg", GlobalMessageCommand.class);
@@ -58,12 +70,14 @@ public class Main extends JavaPlugin {
         registerCommand("cn", NormalChatCommand.class);
         registerCommand("cv", VeteranChatCommand.class);
         registerCommand("cs", StaffChatCommand.class);
-        registerCommand("pkconnect", ConnectCommand.class);
+        registerCommand("pkconnector", PKConnectorCommand.class);
         registerCommand("chat", ChatCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
+
+
 
         Executors.newCachedThreadPool().execute(() -> {
             try {
@@ -116,6 +130,7 @@ public class Main extends JavaPlugin {
             System.out.println("Could not register command '" + name + "'");}
     }
 
+
     public void setupDefaultConfig() {
         File file = new File(getDataFolder(), "config.yml");
 
@@ -124,6 +139,11 @@ public class Main extends JavaPlugin {
         saveConfig();
 
         getConfig().addDefault("AuthenticationCode", "insert_code_here");
+        getConfig().addDefault("ChatFormat.Global", "&8[&7{identifier}&8] &7{player} &8» &f{message}");
+        getConfig().addDefault("ChatFormat.Staff", "&c&lS&4: &7[&c{identifier}&7] &c{player} &4» &f{message}");
+        getConfig().addDefault("ChatFormat.Veteran", "&b&lV&3: &7[&3{identifier}&7] &b{player} &3» &f{message}");
+        getConfig().addDefault("Message.From", "&6From &e{player}&6: &7{message}");
+        getConfig().addDefault("Message.To", "&6To &e{player}&6: &7{message}");
 
 
         getConfig().options().copyDefaults(true);
@@ -220,5 +240,9 @@ public class Main extends JavaPlugin {
 
     public VersionWrapper getWrapper() {
         return wrapper;
+    }
+
+    public YamlConfiguration getConfiguration() {
+        return (YamlConfiguration) getConfig();
     }
 }

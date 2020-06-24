@@ -3,16 +3,10 @@ package dev.acri.pkconnector.bukkit.commands;
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
-import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_8_R3.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -31,7 +25,6 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
         if(args.length == 0){
             sender.sendMessage("§cUsage: /" + label + " <channel>");
             sender.sendMessage("§cSelect a chat channel");
-            sendAvailableChatChannels(u);
         }else {
             ChatChannel channel = ChatChannel.getCanNull(args[0]);
 
@@ -52,8 +45,8 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
             }
 
             sender.sendMessage("§cInvalid chat channel!");
-            sendAvailableChatChannels(u);
         }
+        sendAvailableChatChannels(u);
 
         return true;
     }
@@ -70,7 +63,7 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
                 if(u.isAccessVeteranChat()) list.add("VETERAN");
             }
 
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         for(String str : list) {
             if(str.toLowerCase().startsWith(args[args.length-1].toLowerCase()))
                 returnList.add(str);

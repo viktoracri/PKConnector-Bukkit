@@ -14,8 +14,6 @@ import java.util.List;
 
 public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
 
-    public static final String FORMAT_TO = "§6To §e{player}§6: §7{message}";
-    public static final String FORMAT_FROM = "§6From §e{player}§6: §7{message}";
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -45,8 +43,8 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
 
             String message = builder.toString().substring(0, builder.toString().length() - 1);
 
-            sender.sendMessage(FORMAT_TO.replace("{player}", uTarget.getPlayer().getName()).replace("{message}", message));
-            uTarget.getPlayer().sendMessage(FORMAT_FROM.replace("{player}", sender.getName()).replace("{message}", message));
+            sender.sendMessage(Main.getInstance().getConfiguration().getString("Message.To").replaceAll("&", "§").replace("{player}", uTarget.getPlayer().getName()).replace("{message}", message));
+            uTarget.getPlayer().sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§").replace("{player}", sender.getName()).replace("{message}", message));
 
         }else{
 
