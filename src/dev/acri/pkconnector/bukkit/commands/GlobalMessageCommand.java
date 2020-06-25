@@ -43,8 +43,12 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
 
             String message = builder.toString().substring(0, builder.toString().length() - 1);
 
-            sender.sendMessage(Main.getInstance().getConfiguration().getString("Message.To").replaceAll("&", "§").replace("{player}", uTarget.getPlayer().getName()).replace("{message}", message));
-            uTarget.getPlayer().sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§").replace("{player}", sender.getName()).replace("{message}", message));
+            sender.sendMessage(Main.getInstance().getConfiguration().getString("Message.To")
+                    .replaceAll("&", "§").replace("{player}", uTarget.getPlayer().getName())
+                    .replace("{message}", message).replace("{server}", Main.getInstance().IDENTIFIER));
+            uTarget.getPlayer().sendMessage(Main.getInstance().getConfiguration().getString("Message.From")
+                    .replaceAll("&", "§").replace("{player}", sender.getName())
+                    .replace("{message}", message).replace("{server}", Main.getInstance().IDENTIFIER));
 
         }else{
 

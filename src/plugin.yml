@@ -1,5 +1,5 @@
 name: PKConnector
-version: "0.4"
+version: 0.6
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main

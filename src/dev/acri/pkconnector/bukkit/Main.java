@@ -139,11 +139,11 @@ public class Main extends JavaPlugin {
         saveConfig();
 
         getConfig().addDefault("AuthenticationCode", "insert_code_here");
-        getConfig().addDefault("ChatFormat.Global", "&8[&7{identifier}&8] &7{player} &8» &f{message}");
-        getConfig().addDefault("ChatFormat.Staff", "&c&lS&4: &7[&c{identifier}&7] &c{player} &4» &f{message}");
-        getConfig().addDefault("ChatFormat.Veteran", "&b&lV&3: &7[&3{identifier}&7] &b{player} &3» &f{message}");
-        getConfig().addDefault("Message.From", "&6From &e{player}&6: &7{message}");
-        getConfig().addDefault("Message.To", "&6To &e{player}&6: &7{message}");
+        getConfig().addDefault("ChatFormat.Global", "&8[&7{server}&8] &7{player} &8» &f{message}");
+        getConfig().addDefault("ChatFormat.Staff", "&c&lS&4: &7[&c{server}&7] &c{player} &4» &f{message}");
+        getConfig().addDefault("ChatFormat.Veteran", "&b&lV&3: &7[&3{server}&7] &b{player} &3» &f{message}");
+        getConfig().addDefault("Message.From", "&6From &8[&7{server}&8] &e{player}&6: &7{message}");
+        getConfig().addDefault("Message.To", "&6To &8[&7{server}&8] &e{player}&6: &7{message}");
 
 
         getConfig().options().copyDefaults(true);

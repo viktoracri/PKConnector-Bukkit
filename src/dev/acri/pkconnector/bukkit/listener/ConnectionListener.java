@@ -3,6 +3,7 @@ package dev.acri.pkconnector.bukkit.listener;
 
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
+import dev.acri.pkconnector.bukkit.MojangAPI;
 import dev.acri.pkconnector.bukkit.User;
 import dev.acri.pkconnector.bukkit.commands.GlobalMessageCommand;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
 public class ConnectionListener implements Runnable {
 
@@ -73,7 +75,7 @@ public class ConnectionListener implements Runnable {
                     String player = in.readUTF();
                     String message = in.readUTF();
                     String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
-                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{server}", identifier)
                             .replaceAll("\\{player}", player)
                             .replaceAll("\\{message}", message);
                     for (User u : Main.getInstance().getUserList())
@@ -110,26 +112,36 @@ public class ConnectionListener implements Runnable {
                     String answer = in.readUTF();
                     String str;
                     if(answer.equals("")){
-                        str = "§cCouldn't find player '" + target + "'";
+                        Executors.newCachedThreadPool().execute(() -> {
+                            UUID u = MojangAPI.getUUID(target);
+                            if(u != null){
+                                MojangAPI.HypixelStatus hs = MojangAPI.getHypixelStatus(u);
+                                if(hs != null){
+                                    if(hs.isOnline()) {
+                                        String s = "§a" + MojangAPI.getFixedName(target) + " §6is online on §aHypixel: " + hs.getStatus() + "§6.";
+                                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(s);
+                                        return;
+                                    }
+                                }
+                            }
+                            Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage("§cCouldn't find player '" + target + "'");
+
+
+                        });
+
 
                     }else{
                        str ="§a" + target + " §6is online on §a" + answer + "§6.";
+                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(str);
                     }
-
-                    if(uuid.equals("CONSOLE")) Bukkit.getConsoleSender().sendMessage(str);
-                    else Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(str);
-
 
                     break;
                 case 0xb:
                     String from = in.readUTF();
                     String to = in.readUTF();
                     String msg = in.readUTF();
+                    //String server = in.readUTF();
                     if(Bukkit.getPlayer(to) != null){
-                        Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
-                                .replace("{player}", from).replace("{message}", msg));
-                        Bukkit.getLogger().info(Main.getInstance().getConfiguration().getString("Message.From"));
-
                         Main.getInstance().getPkConnector().sendData(0xc, new String[]{
                                 from,
                                 Bukkit.getPlayer(to).getName(),
@@ -143,21 +155,31 @@ public class ConnectionListener implements Runnable {
                     from = in.readUTF();
                     to = in.readUTF();
                     msg = in.readUTF();
-                    if(msg.equals("")){
-                        Bukkit.getPlayer(from).sendMessage("§cCouldn't find player '" + to + "'");
-                    }else{
-                        Bukkit.getPlayer(from).sendMessage(Main.getInstance().getConfiguration().getString("Message.To").replaceAll("&", "§")
-                                .replace("{player}", to).replace("{message}", msg));
+                    String server = in.readUTF();
+                    String type = in.readUTF();
+                    if(type.equals("FROM")){
+                        Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
+                                .replace("{player}", from).replace("{message}", msg).replace("{server}", server));
+                        Bukkit.getLogger().info(Main.getInstance().getConfiguration().getString("Message.From"));
+                        Main.getInstance().getUser(Bukkit.getPlayer(to)).setLastMessaged(from);
+                    }else if(type.equals("TO")){
+                        if(msg.equals("")){
+                            Bukkit.getPlayer(from).sendMessage("§cCouldn't find player '" + to + "'");
+                        }else{
+                            Bukkit.getPlayer(from).sendMessage(Main.getInstance().getConfiguration().getString("Message.To").replaceAll("&", "§")
+                                    .replace("{player}", to).replace("{message}", msg).replace("{server}", server));
+                        }
+                        Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
+
                     }
 
-                    Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
                     break;
                 case 0xd:
                     identifier = in.readUTF();
                     player = in.readUTF();
                     message = in.readUTF();
                     finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Staff").replaceAll("&", "§")
-                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{server}", identifier)
                             .replaceAll("\\{player}", player)
                             .replaceAll("\\{message}", message);
                     for(User u2 : Main.getInstance().getUserList())
@@ -168,7 +190,7 @@ public class ConnectionListener implements Runnable {
                     player = in.readUTF();
                     message = in.readUTF();
                     finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Veteran").replaceAll("&", "§")
-                            .replaceAll("\\{identifier}", identifier)
+                            .replaceAll("\\{server}", identifier)
                             .replaceAll("\\{player}", player)
                             .replaceAll("\\{message}", message);
                     for(User u1 : Main.getInstance().getUserList())
