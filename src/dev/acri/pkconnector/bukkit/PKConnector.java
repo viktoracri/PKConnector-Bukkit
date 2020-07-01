@@ -14,11 +14,13 @@ import java.util.UUID;
 
 public class PKConnector {
 
-    public String authentication_code;
+    private UUID sessionID;
+
+    private boolean disconnected = true;
 
     public Thread hostWatcherThread;
     public void connect(){
-        authentication_code = Main.getInstance().getConfig().getString("AuthenticationCode");
+        String authentication_code = Main.getInstance().getConfig().getString("AuthenticationCode");
 
         try{UUID.fromString(authentication_code);
         }catch(IllegalArgumentException e){
@@ -40,11 +42,11 @@ public class PKConnector {
 
             Main.getInstance().setConnectionListenerThread(new Thread(new ConnectionListener(), "Thread-ConnectionListener"));
             Main.getInstance().getConnectionListenerThread().start();
-
+            if(hostWatcherThread != null) if(hostWatcherThread.isAlive())hostWatcherThread.stop();
 
 
         } catch (IOException e) {
-            Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Host is not running");
+            Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Host is not running. Contact Viktoracri and run /pkconnector reconnect when host is available again.");
         }
     }
 
@@ -80,7 +82,7 @@ public class PKConnector {
 
             short length = 38;
             for(Object obj : data)
-                if(obj instanceof String) length += (((String) obj).length() + 2);
+                if(obj instanceof String) length += (((String) obj).getBytes().length + 2);
                 else if(obj instanceof Byte) length += 1;
                 else if(obj instanceof Short) length += 2;
                 else if(obj instanceof Integer) length += 4;
@@ -91,7 +93,7 @@ public class PKConnector {
                 else if(obj instanceof Boolean) length += 1;
 
             out.writeShort(length);
-            out.writeUTF(authentication_code);
+            out.writeUTF(sessionID.toString());
             for(Object obj : data)
                 if(obj instanceof String) out.writeUTF((String)obj);
                 else if(obj instanceof Byte) out.writeByte((Byte) obj);
@@ -112,6 +114,7 @@ public class PKConnector {
         } catch (IOException e) {
             if(e.getMessage().equals("Connection refused: connect")){
                 Main.getInstance().setSocket(null);
+                Main.getInstance().getPkConnector().setDisconnected(true);
                 //System.out.println("Nulled socket");
             }
 
@@ -122,43 +125,50 @@ public class PKConnector {
 
         @Override
         public void run() {
-            boolean prevDisconnected = false;
-            boolean disconnected = false;
 
             while(Main.getInstance().isEnabled()) {
                 try {
-                    try {
-                        new Socket("honeyfrost.net", 6006);
 
-                        disconnected = false;
-                    } catch (IOException e) {
-                        disconnected = true;
+                    if(disconnected){
+                        try {
+                            Socket socket = new Socket("honeyfrost.net", 6006);
+                            socket.close();
+                            connect();
+                        } catch (IOException e) {
+                        }
+
+
                     }
 
-                    if(disconnected && prevDisconnected){
-                        Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Lost connection to host. Trying to reconnect in 2 seconds...");
-                        Main.getInstance().getConnectionListenerThread().stop();
-                        Thread.sleep(2000);
-                    }
-
-                    if(!disconnected && prevDisconnected){
-                        connect();
-                        break;
-                    }
-
-
-
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
-
-                prevDisconnected = disconnected;
             }
 
         }
 
 
+    }
+
+    public UUID getSessionID() {
+        return sessionID;
+    }
+
+    public void setSessionID(String sessionID) {
+        this.sessionID = UUID.fromString(sessionID);
+    }
+
+    public boolean isDisconnected() {
+        return disconnected;
+    }
+
+    public void setDisconnected(boolean disconnected) {
+        this.disconnected = disconnected;
+        if(disconnected && Main.getInstance().isEnabled()){
+            Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Lost connection to host. Trying to reconnect..");
+            startThread();
+            Main.getInstance().getConnectionListenerThread().stop();
+        }
     }
 }

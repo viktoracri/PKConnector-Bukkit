@@ -14,7 +14,7 @@ public class GlobalReplyCommand implements TabCompleter, CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if(args.length == 0){
-            sender.sendMessage("§cUsage: /" + label + " <message>");
+            sender.sendMessage("§cUsage: §7/" + label + " <message>");
             sender.sendMessage("§cReply to a player globally.");
         }else if(!(sender instanceof Player)) {
             sender.sendMessage("§cOnly players can execute this command");

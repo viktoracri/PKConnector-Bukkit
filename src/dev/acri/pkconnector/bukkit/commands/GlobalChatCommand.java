@@ -14,16 +14,20 @@ public class GlobalChatCommand implements TabCompleter, CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
+        if (!Main.getInstance().getConfig().getBoolean("global-chat-enabled")){
+            sender.sendMessage("§cThis server has disabled global chat.");
+            return true;
+        }
 
-        if(args.length == 0){
-            sender.sendMessage("§cUsage: /" + label + " <message>");
+        if (args.length == 0) {
+            sender.sendMessage("§cUsage: §7/" + label + " <message>");
             sender.sendMessage("§cSends a chat message globally, across all parkour servers.");
-        }else if(!(sender instanceof Player)){
+        } else if (!(sender instanceof Player)) {
 
             sender.sendMessage("§cOnly players can execute this command");
-        }else if(!Main.getInstance().getUser((Player) sender).isGlobalChatEnabled()){
+        } else if (!Main.getInstance().getUser((Player) sender).isGlobalChatEnabled()) {
             sender.sendMessage("§cYou have disabled global chat. Enable it with /togglechatg");
-        }else if(Main.getInstance().getUser((Player) sender).isGlobalChatSendBanned()){
+        } else if (Main.getInstance().getUser((Player) sender).isGlobalChatSendBanned()) {
             sender.sendMessage("§cYou are banned from sending global chat messages.");
         }else{
             StringBuilder builder = new StringBuilder();

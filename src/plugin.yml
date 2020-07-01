@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.6
+version: 0.6.1
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -24,5 +24,7 @@ commands:
   findplayer:
     description: Find a player
     aliases: find
+  pklist:
+    description: List players globally
   pkconnector:
     description: Admin commands

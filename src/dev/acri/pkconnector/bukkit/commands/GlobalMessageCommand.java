@@ -19,7 +19,7 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if(args.length < 2){
-            sender.sendMessage("§cUsage: /" + label + " <player> <message>");
+            sender.sendMessage("§cUsage: §7/" + label + " <player> <message>");
             sender.sendMessage("§cSend a message to any player globally.");
         }else if(!(sender instanceof Player)){
             sender.sendMessage("§cOnly players can execute this command");

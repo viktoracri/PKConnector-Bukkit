@@ -1,7 +1,6 @@
 package dev.acri.pkconnector.bukkit.commands;
 
 import dev.acri.pkconnector.bukkit.Main;
-import dev.acri.pkconnector.bukkit.MojangAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,15 +10,13 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Executors;
 
 public class FindCommand implements TabCompleter, CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if(args.length == 0){
-            sender.sendMessage("§cUsage: /findplayer <player>");
+            sender.sendMessage("§cUsage: §7/findplayer <player>");
             sender.sendMessage("§cFind what parkour server a player is playing on");
         }else if(Bukkit.getPlayer(args[0]) != null){
             sender.sendMessage("§a" + Bukkit.getPlayer(args[0]).getName() + "§6 is online on §a" + Main.getInstance().NAME);

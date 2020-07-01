@@ -13,5 +13,9 @@ public class PlayerQuitListener implements Listener {
         User u = Main.getInstance().getUser(e.getPlayer());
         u.save();
         Main.getInstance().getUserList().remove(u);
+
+        Main.getInstance().getPkConnector().sendData(0x13, new String[]{
+                e.getPlayer().getUniqueId().toString()
+        });
     }
 }

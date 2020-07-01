@@ -21,7 +21,7 @@ public class NormalChatCommand implements TabCompleter, CommandExecutor {
 
 
         if(args.length == 0){
-            sender.sendMessage("§cUsage: /" + label + " <message>");
+            sender.sendMessage("§cUsage: §7/" + label + " <message>");
             sender.sendMessage("§cSends a normal chat message.");
         }else{
             StringBuilder builder = new StringBuilder();

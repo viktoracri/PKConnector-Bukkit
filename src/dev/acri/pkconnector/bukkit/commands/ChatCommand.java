@@ -22,9 +22,15 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
 
         User u = Main.getInstance().getUser((Player) sender);
 
+        if (!Main.getInstance().getConfig().getBoolean("global-chat-enabled"))
+            if (!(u.isAccessVeteranChat() || u.isAccessStaffChat())) {
+                sender.sendMessage("§cThis server has disabled global chat.");
+                System.out.println(2);
+                return true;
+            }
+
         if(args.length == 0){
-            sender.sendMessage("§cUsage: /" + label + " <channel>");
-            sender.sendMessage("§cSelect a chat channel");
+            sender.sendMessage("§cUsage: §7/" + label + " <channel>");
         }else {
             ChatChannel channel = ChatChannel.getCanNull(args[0]);
 
@@ -35,6 +41,9 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
                 ok = false;
             else if(channel == ChatChannel.GLOBAL && u.isGlobalChatSendBanned()){
                 sender.sendMessage("§cYou are banned from sending global chat messages.");
+                return true;
+            }else if(channel == ChatChannel.GLOBAL && !Main.getInstance().getConfig().getBoolean("global-chat-enabled")){
+                sender.sendMessage("§cThis server has disabled global chat.");
                 return true;
             }
 
@@ -58,7 +67,7 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
         List<String> list = new ArrayList<>();
             if(args.length == 1) {
                 list.add("NORMAL");
-                if(!u.isGlobalChatSendBanned()) list.add("GLOBAL");
+                if(!u.isGlobalChatSendBanned() && Main.getInstance().getConfig().getBoolean("global-chat-enabled")) list.add("GLOBAL");
                 if(u.isAccessStaffChat()) list.add("STAFF");
                 if(u.isAccessVeteranChat()) list.add("VETERAN");
             }
@@ -77,7 +86,7 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
 
         String msg = "§cAvailable chat channels: NORMAL";
 
-        if(!u.isGlobalChatSendBanned())msg += ", GLOBAL";
+        if(!u.isGlobalChatSendBanned() && Main.getInstance().getConfig().getBoolean("global-chat-enabled")) msg += ", GLOBAL";
         if(u.isAccessStaffChat())msg += ", STAFF";
         if(u.isAccessVeteranChat())msg += ", VETERAN";
 

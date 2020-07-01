@@ -3,21 +3,19 @@ package dev.acri.pkconnector.bukkit.listener;
 
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
-import dev.acri.pkconnector.bukkit.MojangAPI;
 import dev.acri.pkconnector.bukkit.User;
-import dev.acri.pkconnector.bukkit.commands.GlobalMessageCommand;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 public class ConnectionListener implements Runnable {
 
-
+    private long disconnected = -1;
     @Override
     public void run() {
         while (Main.getInstance().isEnabled()) {
@@ -33,33 +31,43 @@ public class ConnectionListener implements Runnable {
 
             int initialByte = in.readByte();
 
+            if(disconnected != -1) disconnected = -1;
 
             if(initialByte == 0x05 || initialByte == -1 || initialByte == 0x00) return;
 
 
             short length = in.readShort();
-
             byte[] b = new byte[length];
             while(in.available() < length){
+
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
             }
             in.readFully(b);
 
 
 
-            in = new DataInputStream(new ByteArrayInputStream(b));
 
+            in = new DataInputStream(new ByteArrayInputStream(b));
 
             switch(initialByte) {
                 case 0x02: // Authenticated successfully
                     Main.getInstance().NAME = in.readUTF();
                     Main.getInstance().IDENTIFIER = in.readUTF();
-                    Main.getInstance().getPkConnector().startThread();
+                    Main.getInstance().getPkConnector().setSessionID(in.readUTF());
+                    //Main.getInstance().getPkConnector().startThread();
                     Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[PKConnector] Authenticated as " + Main.getInstance().NAME + " with identifier " + Main.getInstance().IDENTIFIER);
+                    Main.getInstance().getPkConnector().setDisconnected(false);
+
+                    for(Player all : Bukkit.getOnlinePlayers())
+                        Main.getInstance().getPkConnector().sendData(0x12, new String[]{
+                                all.getUniqueId().toString(),
+                                all.getName()
+                        });
                     break;
 
                 case 0x03: // Authentication denied
@@ -70,7 +78,10 @@ public class ConnectionListener implements Runnable {
                 case 0x04: // System message
                     Bukkit.broadcastMessage("System message received: " + in.readUTF());
                     break;
-                case 0x6:
+                case 0x6: // Global message
+                    if(!Main.getInstance().getConfig().getBoolean("global-chat-enabled")){
+                        return;
+                    }
                     String identifier = in.readUTF();
                     String player = in.readUTF();
                     String message = in.readUTF();
@@ -87,7 +98,8 @@ public class ConnectionListener implements Runnable {
                     String uuid = in.readUTF();
                     if (Bukkit.getPlayer(UUID.fromString(uuid)) != null) {
                         User u = Main.getInstance().getUser(UUID.fromString(uuid));
-                        u.setGlobalChatEnabled(in.readBoolean());
+                        if(Main.getInstance().getConfig().getBoolean("global-chat-enabled")) u.setGlobalChatEnabled(in.readBoolean());
+                        else in.readBoolean();
                         u.setAccessStaffChat(in.readBoolean());
                         u.setAccessVeteranChat(in.readBoolean());
                         u.setChatChannel(ChatChannel.get(in.readUTF()));
@@ -97,65 +109,47 @@ public class ConnectionListener implements Runnable {
                 case 0x9:
                     uuid = in.readUTF();
                     String target = in.readUTF();
-                    if (Bukkit.getPlayer(target) != null) {
-                        Main.getInstance().getPkConnector().sendData(0xa, new String[]{
-                                uuid,
-                                Bukkit.getPlayer(target).getName()
-                        });
-
-
-                    }
-                    break;
-                case 0xa:
-                    uuid = in.readUTF();
-                    target = in.readUTF();
                     String answer = in.readUTF();
-                    String str;
                     if(answer.equals("")){
-                        Executors.newCachedThreadPool().execute(() -> {
-                            UUID u = MojangAPI.getUUID(target);
-                            if(u != null){
-                                MojangAPI.HypixelStatus hs = MojangAPI.getHypixelStatus(u);
-                                if(hs != null){
-                                    if(hs.isOnline()) {
-                                        String s = "§a" + MojangAPI.getFixedName(target) + " §6is online on §aHypixel: " + hs.getStatus() + "§6.";
-                                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(s);
-                                        return;
-                                    }
-                                }
-                            }
-                            Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage("§cCouldn't find player '" + target + "'");
-
-
-                        });
-
-
+                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage("§cCouldn't find player '" + target + "'");
                     }else{
-                       str ="§a" + target + " §6is online on §a" + answer + "§6.";
+                        String str ="§a" + target + " §6is online on §a" + answer + "§6.";
                         Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(str);
                     }
+                        break;
+                case 0xa:
+
+                    uuid = in.readUTF();
+                    String server = in.readUTF();
+                    String result = in.readUTF();
+
+                    Player p = Bukkit.getPlayer(UUID.fromString(uuid));
+                    if(p != null){
+
+                        if(server.equals("STAFF")){
+                            p.sendMessage("§6Staff list: " + result);
+                        }else if(server.equals("VETERAN")){
+                            p.sendMessage("§6Veteran list: " + result);
+                        }else if(result.equals("UNKNOWN_TARGET")){
+                            p.sendMessage("§cCan't find server '" + server + "'");
+                        }else if(result.equals("")){
+                            p.sendMessage("§c" + server + " is empty.");
+                        }else{
+                            p.sendMessage("§6Players online on §e" + server + "§6:");
+                            p.sendMessage(result);
+                        }
+                    }
+
+
+
+
 
                     break;
                 case 0xb:
                     String from = in.readUTF();
                     String to = in.readUTF();
                     String msg = in.readUTF();
-                    //String server = in.readUTF();
-                    if(Bukkit.getPlayer(to) != null){
-                        Main.getInstance().getPkConnector().sendData(0xc, new String[]{
-                                from,
-                                Bukkit.getPlayer(to).getName(),
-                                msg
-                        });
-                        Main.getInstance().getUser(Bukkit.getPlayer(to)).setLastMessaged(from);
-                    }
-
-                    break;
-                case 0xc:
-                    from = in.readUTF();
-                    to = in.readUTF();
-                    msg = in.readUTF();
-                    String server = in.readUTF();
+                    server = in.readUTF();
                     String type = in.readUTF();
                     if(type.equals("FROM")){
                         Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
@@ -172,6 +166,10 @@ public class ConnectionListener implements Runnable {
                         Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
 
                     }
+
+                    break;
+                case 0xc:
+
 
                     break;
                 case 0xd:
@@ -199,7 +197,7 @@ public class ConnectionListener implements Runnable {
                 case 0xf:
                     String user = in.readUTF();
                     msg = in.readUTF();
-                    Player p = null;
+                    p = null;
                     if(Bukkit.getPlayerExact(user) != null) p = Bukkit.getPlayerExact(user);
                     else{
                         try{
@@ -213,20 +211,14 @@ public class ConnectionListener implements Runnable {
                     msg = in.readUTF();
                     Bukkit.broadcastMessage(msg);
                     break;
-                case 0x11:
-                    msg = in.readUTF().replaceAll("&", "§");
-                    String a = Main.getInstance().getServer().getClass().getPackage().getName();
-                    String version = a.substring(a.lastIndexOf('.') + 1);
-                    if(version.equals("v1_8_R3")){
-                        Main.getInstance().getWrapper().sendTitleToAll(msg);
-                    }
-                    break;
 
             }
 
 
 
         } catch (IOException ignored) {
+            if(disconnected == -1) disconnected = System.currentTimeMillis();
+            if(System.currentTimeMillis() - disconnected > 3000) Main.getInstance().getPkConnector().setDisconnected(true);
         }
     }
 

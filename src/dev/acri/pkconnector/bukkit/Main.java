@@ -4,8 +4,6 @@ import dev.acri.pkconnector.bukkit.commands.*;
 import dev.acri.pkconnector.bukkit.listener.PlayerChatListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerJoinListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerQuitListener;
-import dev.acri.pkconnector.bukkit.version.VersionMatcher;
-import dev.acri.pkconnector.bukkit.version.VersionWrapper;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.TabCompleter;
@@ -19,6 +17,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
@@ -35,7 +34,6 @@ public class Main extends JavaPlugin {
 
     private List<User> userList = new ArrayList<>();
 
-    private VersionWrapper wrapper;
 
     private YamlConfiguration configuration;
 
@@ -43,23 +41,10 @@ public class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        try {
-            wrapper = new VersionMatcher().match();
-        }catch(RuntimeException e){}
 
         setupDefaultConfig();
 
         pkConnector = new PKConnector();
-
-        //configuration = new Utf8YamlConfiguration();
-       /* this.saveDefaultConfig();
-        try {
-            configuration.load(new File(this.getDataFolder() + "/config.yml"));
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-
-        */
 
 
         registerCommand("findplayer", FindCommand.class);
@@ -72,14 +57,19 @@ public class Main extends JavaPlugin {
         registerCommand("cs", StaffChatCommand.class);
         registerCommand("pkconnector", PKConnectorCommand.class);
         registerCommand("chat", ChatCommand.class);
+        registerCommand("pklist", PKListCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
 
 
+        for(Player all : Bukkit.getOnlinePlayers()) {
+            userList.add(new User(all));
+        }
 
-        Executors.newCachedThreadPool().execute(() -> {
+        ExecutorService ex = Executors.newCachedThreadPool();
+        ex.execute(() -> {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -87,14 +77,9 @@ public class Main extends JavaPlugin {
             }
             pkConnector.connect();
 
-            for(Player all : Bukkit.getOnlinePlayers()) {
-                userList.add(new User(all));
-                Main.getInstance().getPkConnector().sendData(0x7, new String[]{
-                        all.getUniqueId().toString()
-                });
 
-            }
         });
+        ex.shutdown();
 
 
 
@@ -144,6 +129,8 @@ public class Main extends JavaPlugin {
         getConfig().addDefault("ChatFormat.Veteran", "&b&lV&3: &7[&3{server}&7] &b{player} &3» &f{message}");
         getConfig().addDefault("Message.From", "&6From &8[&7{server}&8] &e{player}&6: &7{message}");
         getConfig().addDefault("Message.To", "&6To &8[&7{server}&8] &e{player}&6: &7{message}");
+        getConfig().addDefault("global-chat-enabled", true);
+        getConfig().addDefault("new-users-disable-global-chat", false);
 
 
         getConfig().options().copyDefaults(true);
@@ -153,6 +140,11 @@ public class Main extends JavaPlugin {
     public void sendGlobalChat(Player player, String message){
         if(socket == null){
             player.sendMessage("§cThis server is not connected to PKConnector. Contact a server admin if you think this is in error.");
+            return;
+        }
+
+        if(!Main.getInstance().getConfig().getBoolean("global-chat-enabled")){
+            player.sendMessage("§cThis server has disabled global chat.");
             return;
         }
         User u = getUser(player);
@@ -238,9 +230,6 @@ public class Main extends JavaPlugin {
         return userList;
     }
 
-    public VersionWrapper getWrapper() {
-        return wrapper;
-    }
 
     public YamlConfiguration getConfiguration() {
         return (YamlConfiguration) getConfig();
