@@ -14,28 +14,29 @@ import java.util.UUID;
 
 public class PKConnector {
 
-    public String authentication_code;
+    private String sessionID;
 
     public Thread hostWatcherThread;
+    private Socket socket;
     public void connect(){
-        authentication_code = Main.getInstance().getConfig().getString("AuthenticationCode");
+        String authenticationCode = Main.getInstance().getConfig().getString("AuthenticationCode");
 
-        try{UUID.fromString(authentication_code);
+        try{UUID.fromString(authenticationCode);
         }catch(IllegalArgumentException e){
             Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.RED + "Authentication Code as specified in config.yml is invalid. Authentication aborted.");
             return;
         }
 
         try {
-            Socket socket = new Socket("honeyfrost.net", 6006);
-            socket.setKeepAlive(true);
+            socket = new Socket("honeyfrost.net", 6006);
             Main.getInstance().setSocket(socket);
 
             DataOutputStream out = new DataOutputStream(Main.getInstance().getSocket().getOutputStream());
-            out.write(0x01);
-            out.writeShort(authentication_code.length()+2 + 8);
-            out.writeUTF(authentication_code);
+            out.writeByte(0x01);
+            out.writeShort(46);
+            out.writeUTF(authenticationCode);
             out.writeDouble(Double.parseDouble(Main.getInstance().getDescription().getVersion()));
+            out.flush();
             Bukkit.getConsoleSender().sendMessage("§a[PKConnector] Authenticating...");
 
             Main.getInstance().setConnectionListenerThread(new Thread(new ConnectionListener(), "Thread-ConnectionListener"));
@@ -47,6 +48,8 @@ public class PKConnector {
             Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Host is not running");
         }
     }
+
+
 
     public void startThread(){
         hostWatcherThread = new Thread(new HostWatcher(), "Thread-HostWatcher");
@@ -91,7 +94,7 @@ public class PKConnector {
                 else if(obj instanceof Boolean) length += 1;
 
             out.writeShort(length);
-            out.writeUTF(authentication_code);
+            out.writeUTF(sessionID);
             for(Object obj : data)
                 if(obj instanceof String) out.writeUTF((String)obj);
                 else if(obj instanceof Byte) out.writeByte((Byte) obj);
@@ -107,7 +110,7 @@ public class PKConnector {
             out.flush();
             socket.close();
 
-           // System.out.println("Sent byte 0x" + Integer.toHexString(b));
+            System.out.println("Sent byte 0x" + Integer.toHexString(b));
 
         } catch (IOException e) {
             if(e.getMessage().equals("Connection refused: connect")){
@@ -136,7 +139,7 @@ public class PKConnector {
                     }
 
                     if(disconnected && prevDisconnected){
-                        Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Lost connection to host. Trying to reconnect in 2 seconds...");
+                        Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Lost connection to host. Trying to reconnect in 3 seconds...");
                         Main.getInstance().getConnectionListenerThread().stop();
                         Thread.sleep(2000);
                     }
@@ -161,4 +164,13 @@ public class PKConnector {
 
 
     }
+
+    public void setSessionID(String id){
+        this.sessionID = id;
+    }
+
+    public String getSessionID(){
+        return this.sessionID;
+    }
+
 }

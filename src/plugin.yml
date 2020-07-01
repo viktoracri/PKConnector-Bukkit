@@ -26,3 +26,4 @@ commands:
     aliases: find
   pkconnector:
     description: Admin commands
+  test:

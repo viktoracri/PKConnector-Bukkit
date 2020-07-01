@@ -72,6 +72,7 @@ public class Main extends JavaPlugin {
         registerCommand("cs", StaffChatCommand.class);
         registerCommand("pkconnector", PKConnectorCommand.class);
         registerCommand("chat", ChatCommand.class);
+        registerCommand("test", TestCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
