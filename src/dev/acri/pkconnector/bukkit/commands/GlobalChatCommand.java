@@ -36,7 +36,9 @@ public class GlobalChatCommand implements TabCompleter, CommandExecutor {
 
             String message = builder.toString().substring(0, builder.toString().length() - 1);
 
-            Main.getInstance().sendGlobalChat((Player) sender, message);
+            Main.getInstance().getUser((Player) sender).setNextMessageGlobalChat(true);
+            ((Player) sender).chat(message);
+            //Main.getInstance().sendGlobalChat((Player) sender, message);
         }
 
 

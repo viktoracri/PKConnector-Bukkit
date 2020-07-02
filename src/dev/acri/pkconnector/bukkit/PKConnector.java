@@ -16,6 +16,8 @@ public class PKConnector {
 
     private UUID sessionID;
 
+
+
     private boolean disconnected = true;
 
     public Thread hostWatcherThread;
@@ -35,9 +37,9 @@ public class PKConnector {
 
             DataOutputStream out = new DataOutputStream(Main.getInstance().getSocket().getOutputStream());
             out.write(0x01);
-            out.writeShort(authentication_code.length()+2 + 8);
+            out.writeShort(authentication_code.length()+2 + Main.getInstance().getDescription().getVersion().length() + 2);
             out.writeUTF(authentication_code);
-            out.writeDouble(Double.parseDouble(Main.getInstance().getDescription().getVersion()));
+            out.writeUTF(Main.getInstance().getDescription().getVersion());
             Bukkit.getConsoleSender().sendMessage("§a[PKConnector] Authenticating...");
 
             Main.getInstance().setConnectionListenerThread(new Thread(new ConnectionListener(), "Thread-ConnectionListener"));

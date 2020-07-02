@@ -15,6 +15,10 @@ public class User {
     private boolean accessVeteranChat = false;
     private boolean globalChatSendBanned = false;
 
+    private boolean nextMessageGlobalChat = false;
+    private long lastMessageTime = -1;
+    private String lastMessage = "";
+
     public User(Player player){
         this.player = player;
     }
@@ -89,5 +93,29 @@ public class User {
 
     public void setGlobalChatSendBanned(boolean globalChatSendBanned) {
         this.globalChatSendBanned = globalChatSendBanned;
+    }
+
+    public boolean isNextMessageGlobalChat() {
+        return nextMessageGlobalChat;
+    }
+
+    public void setNextMessageGlobalChat(boolean nextMessageGlobalChat) {
+        this.nextMessageGlobalChat = nextMessageGlobalChat;
+    }
+
+    public long getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(long lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
     }
 }

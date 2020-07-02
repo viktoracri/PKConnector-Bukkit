@@ -14,7 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +27,8 @@ public class Main extends JavaPlugin {
     private static Main instance;
     private Socket socket;
 
+    private final double CHAT_DELAY = 2.0;
+
     private PKConnector pkConnector;
 
     public String NAME = "Unknown Name";
@@ -34,13 +38,20 @@ public class Main extends JavaPlugin {
 
     private List<User> userList = new ArrayList<>();
 
+    DecimalFormat numberFormat = new DecimalFormat("0.0");
 
-    private YamlConfiguration configuration;
 
 
     @Override
     public void onEnable() {
         instance = this;
+        /*
+        try{
+            wrapper = new VersionMatcher().match();
+        }catch(RuntimeException e){e.printStackTrace();}
+
+         */
+
 
         setupDefaultConfig();
 
@@ -58,6 +69,7 @@ public class Main extends JavaPlugin {
         registerCommand("pkconnector", PKConnectorCommand.class);
         registerCommand("chat", ChatCommand.class);
         registerCommand("pklist", PKListCommand.class);
+        registerCommand("pkservers", ConnectedServersCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -131,6 +143,8 @@ public class Main extends JavaPlugin {
         getConfig().addDefault("Message.To", "&6To &8[&7{server}&8] &e{player}&6: &7{message}");
         getConfig().addDefault("global-chat-enabled", true);
         getConfig().addDefault("new-users-disable-global-chat", false);
+        getConfig().addDefault("bad-word-filter", Arrays.asList(
+                "fuck", "nigger", "n1gger", "fucking"));
 
 
         getConfig().options().copyDefaults(true);
@@ -152,12 +166,29 @@ public class Main extends JavaPlugin {
             player.sendMessage("§cYou are banned from sending global chat messages.");
             return;
         }
+        if(u.getLastMessageTime() != -1) if(System.currentTimeMillis() - u.getLastMessageTime() < CHAT_DELAY*1000){
+            double seconds = (CHAT_DELAY*1000 - (System.currentTimeMillis() - u.getLastMessageTime()))/1000;
+            player.sendMessage("§cPlease wait " + numberFormat.format(seconds) + " second" + (seconds >1.0 ? "s" : "") + " before typing again.");
+            return;
+        }
+        if(u.getLastMessage().equalsIgnoreCase(message)){
+            player.sendMessage("§cYou cannot say the same thing twice in a row.");
+            return;
+        }
+
+
+
+        u.setLastMessageTime(System.currentTimeMillis());
+
+        u.setLastMessage(message);
+
 
         List<Object> data = new ArrayList<>();
         data.add(player.getName());
         data.add(message);
 
         Main.getInstance().getPkConnector().sendData(0x6, data);
+
 
     }
 
@@ -234,4 +265,5 @@ public class Main extends JavaPlugin {
     public YamlConfiguration getConfiguration() {
         return (YamlConfiguration) getConfig();
     }
+
 }

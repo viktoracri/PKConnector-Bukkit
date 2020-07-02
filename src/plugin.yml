@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.6.1
+version: 0.7.1
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -9,8 +9,9 @@ commands:
     description: Toggle whether or not you see the global chat.
   gmsg:
     description: Message players globally
-  chat:
+  pkchat:
     description: Set your current chat channel
+    aliases: chat
   cg:
     description: Chat global
   cn:
@@ -28,3 +29,5 @@ commands:
     description: List players globally
   pkconnector:
     description: Admin commands
+  pkservers:
+    description: Show servers currently connected to PKConnector

@@ -6,6 +6,7 @@ import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayInputStream;
@@ -87,11 +88,42 @@ public class ConnectionListener implements Runnable {
                     String message = in.readUTF();
                     String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
                             .replaceAll("\\{server}", identifier)
-                            .replaceAll("\\{player}", player)
-                            .replaceAll("\\{message}", message);
+                            .replaceAll("\\{player}", player);
+
+
+                     /*
+                            Filter out bad words
+                     */
+                    StringBuilder badwordBuilder = new StringBuilder();
+                    for(String word : message.split(" "))
+                        if(Main.getInstance().getConfig().getStringList("bad-word-filter").contains(word.toLowerCase())) badwordBuilder.append(new String(new char[word.length()]).replace("\0", "*")).append(" ");
+                        else badwordBuilder.append(word).append(" ");
+
                     for (User u : Main.getInstance().getUserList())
-                        if (u.isGlobalChatEnabled()) u.getPlayer().sendMessage(finalMessage);
-                    Bukkit.getConsoleSender().sendMessage("[Global Chat] " + finalMessage);
+                        if (u.isGlobalChatEnabled()) {
+
+                            /*
+                                    Highlight names
+                             */
+                            StringBuilder builder = new StringBuilder();
+                            boolean containsName = false;
+                            for(String word : badwordBuilder.toString().split(" "))
+                                if(word.equalsIgnoreCase(u.getPlayer().getName())) {
+                                    builder.append("§e").append(word).append("§r ");
+                                    containsName = true;
+                                }
+                                else builder.append(word).append(" ");
+
+
+                            u.getPlayer().sendMessage(
+                                    finalMessage.replace("{message}",
+                                            builder.toString().substring(0, builder.toString().length() - 1)));
+
+
+                        }
+
+
+                    Bukkit.getConsoleSender().sendMessage("[Global Chat] " + finalMessage.replace("{message}", message));
 
                     break;
                 case 0x7:
@@ -110,11 +142,22 @@ public class ConnectionListener implements Runnable {
                     uuid = in.readUTF();
                     String target = in.readUTF();
                     String answer = in.readUTF();
+
+
+                    String format = "§a{target} §6is{P} §a{answer}§6.";
+
+                    if(answer.contains("{NONE}")) {
+                        format = format.replace("{P}", "");
+                        answer = answer.replace("{NONE}", "");
+                    }
+                    else format = format.replace("{P}", " online on");
+
                     if(answer.equals("")){
                         Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage("§cCouldn't find player '" + target + "'");
                     }else{
-                        String str ="§a" + target + " §6is online on §a" + answer + "§6.";
-                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(str);
+                        Bukkit.getPlayer(UUID.fromString(uuid)).sendMessage(
+                                format.replace("{target}", target).replace("{answer}", answer)
+                        );
                     }
                         break;
                 case 0xa:
@@ -154,7 +197,6 @@ public class ConnectionListener implements Runnable {
                     if(type.equals("FROM")){
                         Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
                                 .replace("{player}", from).replace("{message}", msg).replace("{server}", server));
-                        Bukkit.getLogger().info(Main.getInstance().getConfiguration().getString("Message.From"));
                         Main.getInstance().getUser(Bukkit.getPlayer(to)).setLastMessaged(from);
                     }else if(type.equals("TO")){
                         if(msg.equals("")){
@@ -169,6 +211,14 @@ public class ConnectionListener implements Runnable {
 
                     break;
                 case 0xc:
+
+                    player = in.readUTF();
+                    result = in.readUTF();
+                    if(Bukkit.getPlayer(UUID.fromString(player)) != null){
+                        Bukkit.getPlayer(UUID.fromString(player)).sendMessage("§6List of servers connected to PKConnector:");
+                        for(String section : result.split("\n"))
+                            Bukkit.getPlayer(UUID.fromString(player)).sendMessage(section);
+                    }
 
 
                     break;
