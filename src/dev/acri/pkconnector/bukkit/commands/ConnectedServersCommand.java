@@ -19,6 +19,11 @@ public class ConnectedServersCommand implements TabCompleter, CommandExecutor {
             return true;
         }
 
+        if(Main.getInstance().getPkConnector().isDisconnected()){
+            sender.sendMessage("§cThis server is not currently connected to PKConnector.");
+            return true;
+        }
+
         Main.getInstance().getPkConnector().sendData(0xc, new String[]{
                 ((Player) sender).getUniqueId().toString()
         });

@@ -49,6 +49,11 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
 
             if(ok && channel != null){
                 sender.sendMessage("§aChat channel set to " + channel.name());
+                if(!u.isGlobalChatEnabled() && channel == ChatChannel.GLOBAL){
+                    u.setGlobalChatEnabled(true);
+                    sender.sendMessage("§aGlobal chat enabled");
+                }
+
                 u.setChatChannel(channel);
                 return true;
             }

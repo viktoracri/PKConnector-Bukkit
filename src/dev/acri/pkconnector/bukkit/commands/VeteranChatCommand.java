@@ -15,6 +15,11 @@ public class VeteranChatCommand implements TabCompleter, CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
+        if(Main.getInstance().getPkConnector().isDisconnected()){
+            sender.sendMessage("§cThis server is not currently connected to PKConnector.");
+            return true;
+        }
+
         if(!(sender instanceof Player)){
             sender.sendMessage("§cOnly players can execute this command");
             return true;

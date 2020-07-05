@@ -9,12 +9,27 @@ import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class ConnectionListener implements Runnable {
+
+    Cipher cipher;
+
+    {
+        try {
+            cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        }
+    }
 
     private long disconnected = -1;
     @Override
@@ -29,17 +44,18 @@ public class ConnectionListener implements Runnable {
 
             DataInputStream in = new DataInputStream(Main.getInstance().getSocket().getInputStream());
 
-
             int initialByte = in.readByte();
-
             if(disconnected != -1) disconnected = -1;
 
             if(initialByte == 0x05 || initialByte == -1 || initialByte == 0x00) return;
 
 
             short length = in.readShort();
+//            System.out.println("Received 0x" + Integer.toHexString(initialByte) + ", length: " + length);
+
             byte[] b = new byte[length];
             while(in.available() < length){
+//                System.out.println("Available: " + in.available());
 
                 try {
                     Thread.sleep(20);
@@ -51,15 +67,45 @@ public class ConnectionListener implements Runnable {
             in.readFully(b);
 
 
+            in = new DataInputStream(new ByteArrayInputStream(b));
+
+//            System.out.println(Arrays.toString(b));
+
+            if(initialByte != 0x03) {
+
+                //int encryptedKeySize = in.readShort();
+                byte[] encryptedKey = new byte[256];
+                for(int i = 0; i < 256; i++){
+                    encryptedKey[i] = (byte) in.read();
+                }
+
+                int informationSize = in.readShort();
+                byte[] information = new byte[informationSize];
+                for(int i = 0; i < informationSize; i++){
+                    information[i] = (byte) in.read();
+                }
+
+                cipher.init(Cipher.PRIVATE_KEY, Main.getInstance().getPkConnector().getPrivateKey());
+                byte[] decryptedKey = cipher.doFinal(encryptedKey);
+
+                SecretKey originalKey = new SecretKeySpec(decryptedKey , 0, decryptedKey .length, "AES");
+                Cipher aesCipher = Cipher.getInstance("AES");
+                aesCipher.init(Cipher.DECRYPT_MODE, originalKey);
+                b = aesCipher.doFinal(information);
+
+
+               // b = Main.getInstance().getPkConnector().decrypt(b);
+            }
+//            System.out.println(Arrays.toString(b));
 
 
             in = new DataInputStream(new ByteArrayInputStream(b));
+
 
             switch(initialByte) {
                 case 0x02: // Authenticated successfully
                     Main.getInstance().NAME = in.readUTF();
                     Main.getInstance().IDENTIFIER = in.readUTF();
-                    Main.getInstance().getPkConnector().setSessionID(in.readUTF());
                     //Main.getInstance().getPkConnector().startThread();
                     Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[PKConnector] Authenticated as " + Main.getInstance().NAME + " with identifier " + Main.getInstance().IDENTIFIER);
                     Main.getInstance().getPkConnector().setDisconnected(false);
@@ -72,9 +118,17 @@ public class ConnectionListener implements Runnable {
                     break;
 
                 case 0x03: // Authentication denied
-                    Bukkit.getLogger().info("Could not connect. Reason: " + in.readUTF());
+                    //System.out.println("1");
+                    String reason = in.readUTF();
+                    Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not connect. Reason: " + reason);
+                    if(reason.contains("Unsupported version")){
+                        Main.getInstance().updatePlugin();
+                    }
                     Main.getInstance().getSocket().close();
                     Main.getInstance().getConnectionListenerThread().stop();
+
+
+
                     break;
                 case 0x04: // System message
                     Bukkit.broadcastMessage("System message received: " + in.readUTF());
@@ -130,8 +184,11 @@ public class ConnectionListener implements Runnable {
                     String uuid = in.readUTF();
                     if (Bukkit.getPlayer(UUID.fromString(uuid)) != null) {
                         User u = Main.getInstance().getUser(UUID.fromString(uuid));
-                        if(Main.getInstance().getConfig().getBoolean("global-chat-enabled")) u.setGlobalChatEnabled(in.readBoolean());
-                        else in.readBoolean();
+                        if(Main.getInstance().getConfig().getBoolean("auto-disable-global-chat-on-join")) {
+                            u.setGlobalChatEnabled(false);
+                            in.readBoolean();
+                        }
+                        else u.setGlobalChatEnabled(in.readBoolean());
                         u.setAccessStaffChat(in.readBoolean());
                         u.setAccessVeteranChat(in.readBoolean());
                         u.setChatChannel(ChatChannel.get(in.readUTF()));
@@ -269,6 +326,8 @@ public class ConnectionListener implements Runnable {
         } catch (IOException ignored) {
             if(disconnected == -1) disconnected = System.currentTimeMillis();
             if(System.currentTimeMillis() - disconnected > 3000) Main.getInstance().getPkConnector().setDisconnected(true);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
         }
     }
 

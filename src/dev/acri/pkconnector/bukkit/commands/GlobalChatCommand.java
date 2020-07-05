@@ -19,6 +19,11 @@ public class GlobalChatCommand implements TabCompleter, CommandExecutor {
             return true;
         }
 
+        if(Main.getInstance().getPkConnector().isDisconnected()){
+            sender.sendMessage("§cThis server is not currently connected to PKConnector.");
+            return true;
+        }
+
         if (args.length == 0) {
             sender.sendMessage("§cUsage: §7/" + label + " <message>");
             sender.sendMessage("§cSends a chat message globally, across all parkour servers.");

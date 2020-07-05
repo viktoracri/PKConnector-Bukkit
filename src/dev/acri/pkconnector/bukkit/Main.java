@@ -4,21 +4,30 @@ import dev.acri.pkconnector.bukkit.commands.*;
 import dev.acri.pkconnector.bukkit.listener.PlayerChatListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerJoinListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerQuitListener;
+import github.scarsz.discordsrv.util.PluginUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.plugin.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,6 +60,8 @@ public class Main extends JavaPlugin {
         }catch(RuntimeException e){e.printStackTrace();}
 
          */
+
+
 
 
         setupDefaultConfig();
@@ -93,8 +104,21 @@ public class Main extends JavaPlugin {
         });
         ex.shutdown();
 
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            Plugin p = Bukkit.getPluginManager().getPlugin("PKConnectorReloader");
+            if(p != null){
+                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Cleaning up...");
+                String PLUGIN_FILE = p.getClass().getProtectionDomain()
+                        .getCodeSource()
+                        .getLocation()
+                        .getPath();
+                unload(p);
 
+                new File(PLUGIN_FILE).delete();
 
+                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Successfully updated to version " + getDescription().getVersion() + "!");
+            }
+        }, 40);
 
     }
 
@@ -135,13 +159,13 @@ public class Main extends JavaPlugin {
             try {file.getParentFile().mkdirs();file.createNewFile();} catch (IOException e) {e.printStackTrace();}}
         saveConfig();
 
-        getConfig().addDefault("AuthenticationCode", "insert_code_here");
         getConfig().addDefault("ChatFormat.Global", "&8[&7{server}&8] &7{player} &8» &f{message}");
         getConfig().addDefault("ChatFormat.Staff", "&c&lS&4: &7[&c{server}&7] &c{player} &4» &f{message}");
         getConfig().addDefault("ChatFormat.Veteran", "&b&lV&3: &7[&3{server}&7] &b{player} &3» &f{message}");
         getConfig().addDefault("Message.From", "&6From &8[&7{server}&8] &e{player}&6: &7{message}");
         getConfig().addDefault("Message.To", "&6To &8[&7{server}&8] &e{player}&6: &7{message}");
         getConfig().addDefault("global-chat-enabled", true);
+        getConfig().addDefault("auto-disable-global-chat-on-join", false);
         getConfig().addDefault("new-users-disable-global-chat", false);
         getConfig().addDefault("bad-word-filter", Arrays.asList(
                 "fuck", "nigger", "n1gger", "fucking"));
@@ -152,8 +176,8 @@ public class Main extends JavaPlugin {
     }
 
     public void sendGlobalChat(Player player, String message){
-        if(socket == null){
-            player.sendMessage("§cThis server is not connected to PKConnector. Contact a server admin if you think this is in error.");
+        if(pkConnector.isDisconnected()){
+            player.sendMessage("§cThis server is not currently connected to PKConnector.");
             return;
         }
 
@@ -193,8 +217,8 @@ public class Main extends JavaPlugin {
     }
 
     public void sendStaffChat(Player player, String message){
-        if(socket == null){
-            player.sendMessage("§cThis server is not connected to PKConnector. Contact a server admin if you think this is in error.");
+        if(pkConnector.isDisconnected()){
+            player.sendMessage("§cThis server is not currently connected to PKConnector.");
             return;
         }
         List<Object> data = new ArrayList<>();
@@ -206,8 +230,8 @@ public class Main extends JavaPlugin {
     }
 
     public void sendVeteranChat(Player player, String message){
-        if(socket == null){
-            player.sendMessage("§cThis server is not connected to PKConnector. Contact a server admin if you think this is in error.");
+        if(pkConnector.isDisconnected()){
+            player.sendMessage("§cThis server is not currently connected to PKConnector.");
             return;
         }
         List<Object> data = new ArrayList<>();
@@ -215,6 +239,185 @@ public class Main extends JavaPlugin {
         data.add(message);
 
         Main.getInstance().getPkConnector().sendData(0xe, data);
+
+    }
+
+    public void updatePlugin(){
+        if(System.getProperty("os.name").contains("Windows")){
+            Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Auto-Update does not work on Windows operating systems. You need to manually update the plugin.");
+            return;
+        }
+
+
+        try {
+            URL FILE_URL = new URL("https://honeyfrost.net/content/PKConnector/PKConnectorPlugin.jar");
+            String DESTINATION = Main.getInstance().getClass().getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .getPath();
+
+            URL EXTERNAL_RELOADER = new URL("https://honeyfrost.net/content/PKConnector/PKConnectorReloader.jar");
+            String RELOADER_DESTINATION = Main.getInstance().getDataFolder().getParentFile().getAbsolutePath() + "/PKConnectorReloader.jar";
+
+
+            Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading update...");
+
+
+            InputStream in = null;
+            try{
+               in = FILE_URL.openStream();
+            }catch(IOException e){
+                Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not download latest version");
+                return;
+            }
+            Files.copy(in, new File(DESTINATION).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Plugin updated.");
+
+
+            Thread t = new Thread(() -> {
+                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading external plugin reloader");
+                try {
+                    InputStream ex_in = null;
+                    try{
+                        ex_in= EXTERNAL_RELOADER.openStream();
+                    }catch(IOException e){
+                        Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not download reloader. Restart the server to apply the update.");
+                        return;
+                    }
+
+                    Files.copy(ex_in, Paths.get(RELOADER_DESTINATION), StandardCopyOption.REPLACE_EXISTING);
+                    Bukkit.getConsoleSender().sendMessage("§e[PKConnector] External plugin reloader downloaded");
+                    Bukkit.getPluginManager().loadPlugin(new File(RELOADER_DESTINATION));
+                    Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("PKConnectorReloader"));
+
+                } catch (IOException | InvalidPluginException | InvalidDescriptionException e) {
+                    e.printStackTrace();
+                }
+            }, "PluginReloader");
+            t.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void unload(Plugin plugin) {
+
+        String name = plugin.getName();
+
+        PluginManager pluginManager = Bukkit.getPluginManager();
+
+        SimpleCommandMap commandMap = null;
+
+        List<Plugin> plugins = null;
+
+        Map<String, Plugin> names = null;
+        Map<String, Command> commands = null;
+        Map<Event, SortedSet<RegisteredListener>> listeners = null;
+
+        boolean reloadlisteners = true;
+
+        if (pluginManager != null) {
+
+            pluginManager.disablePlugin(plugin);
+
+            try {
+
+                Field pluginsField = Bukkit.getPluginManager().getClass().getDeclaredField("plugins");
+                pluginsField.setAccessible(true);
+                plugins = (List<Plugin>) pluginsField.get(pluginManager);
+
+                Field lookupNamesField = Bukkit.getPluginManager().getClass().getDeclaredField("lookupNames");
+                lookupNamesField.setAccessible(true);
+                names = (Map<String, Plugin>) lookupNamesField.get(pluginManager);
+
+                try {
+                    Field listenersField = Bukkit.getPluginManager().getClass().getDeclaredField("listeners");
+                    listenersField.setAccessible(true);
+                    listeners = (Map<Event, SortedSet<RegisteredListener>>) listenersField.get(pluginManager);
+                } catch (Exception e) {
+                    reloadlisteners = false;
+                }
+
+                Field commandMapField = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
+                commandMapField.setAccessible(true);
+                commandMap = (SimpleCommandMap) commandMapField.get(pluginManager);
+
+                Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+                knownCommandsField.setAccessible(true);
+                commands = (Map<String, Command>) knownCommandsField.get(commandMap);
+
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        pluginManager.disablePlugin(plugin);
+
+        if (plugins != null && plugins.contains(plugin))
+            plugins.remove(plugin);
+
+        if (names != null && names.containsKey(name))
+            names.remove(name);
+
+        if (listeners != null && reloadlisteners) {
+            for (SortedSet<RegisteredListener> set : listeners.values()) {
+                for (Iterator<RegisteredListener> it = set.iterator(); it.hasNext(); ) {
+                    RegisteredListener value = it.next();
+                    if (value.getPlugin() == plugin) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+
+        if (commandMap != null) {
+            for (Iterator<Map.Entry<String, Command>> it = commands.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, Command> entry = it.next();
+                if (entry.getValue() instanceof PluginCommand) {
+                    PluginCommand c = (PluginCommand) entry.getValue();
+                    if (c.getPlugin() == plugin) {
+                        c.unregister(commandMap);
+                        it.remove();
+                    }
+                }
+            }
+        }
+
+        // Attempt to close the classloader to unlock any handles on the plugin's jar file.
+        ClassLoader cl = plugin.getClass().getClassLoader();
+
+        if (cl instanceof URLClassLoader) {
+
+            try {
+
+                Field pluginField = cl.getClass().getDeclaredField("plugin");
+                pluginField.setAccessible(true);
+                pluginField.set(cl, null);
+
+                Field pluginInitField = cl.getClass().getDeclaredField("pluginInit");
+                pluginInitField.setAccessible(true);
+                pluginInitField.set(cl, null);
+
+            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+            }
+
+            try {
+
+                ((URLClassLoader) cl).close();
+            } catch (IOException ex) {
+            }
+
+        }
+
+        // Will not work on processes started with the -XX:+DisableExplicitGC flag, but lets try it anyway.
+        // This tries to get around the issue where Windows refuses to unlock jar files that were previously loaded into the JVM.
+        System.gc();
+
 
     }
 
@@ -259,6 +462,7 @@ public class Main extends JavaPlugin {
 
     public List<User> getUserList() {
         return userList;
+
     }
 
 
