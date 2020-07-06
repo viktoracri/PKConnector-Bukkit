@@ -1,6 +1,7 @@
 package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.commands.*;
+import dev.acri.pkconnector.bukkit.listener.CommandListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerChatListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerJoinListener;
 import dev.acri.pkconnector.bukkit.listener.PlayerQuitListener;
@@ -85,6 +86,7 @@ public class Main extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
+        Bukkit.getPluginManager().registerEvents(new CommandListener(), this);
 
 
         for(Player all : Bukkit.getOnlinePlayers()) {

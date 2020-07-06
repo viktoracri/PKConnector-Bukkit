@@ -80,6 +80,7 @@ public class ConnectionListener implements Runnable {
                 }
 
                 int informationSize = in.readShort();
+//                System.out.println("byte: 0x" + Integer.toHexString(initialByte) + ", infoSize: " + informationSize);
                 byte[] information = new byte[informationSize];
                 for(int i = 0; i < informationSize; i++){
                     information[i] = (byte) in.read();
@@ -139,7 +140,7 @@ public class ConnectionListener implements Runnable {
                     }
                     String identifier = in.readUTF();
                     String player = in.readUTF();
-                    String message = in.readUTF();
+                    String message = in.readUTF().replaceAll("§", "&");
                     String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
                             .replaceAll("\\{server}", identifier)
                             .replaceAll("\\{player}", player);

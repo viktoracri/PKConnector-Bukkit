@@ -24,6 +24,7 @@ public class PKConnectorCommand implements TabCompleter, CommandExecutor {
                 if(Main.getInstance().getConnectionListenerThread() != null)
                     if(Main.getInstance().getConnectionListenerThread().isAlive())
                         Main.getInstance().getConnectionListenerThread().stop();
+                if(Main.getInstance().getSocket() != null)
                 try {
                     Main.getInstance().getSocket().close();
                 } catch (IOException e) {

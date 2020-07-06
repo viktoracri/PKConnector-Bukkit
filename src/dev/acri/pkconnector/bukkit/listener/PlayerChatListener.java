@@ -29,6 +29,7 @@ public class PlayerChatListener implements Listener {
             if(!u.isGlobalChatEnabled()){
                 e.getPlayer().sendMessage("§cYou have disabled global chat. Enable it with /togglechatg");
             }else Main.getInstance().sendGlobalChat(e.getPlayer(), e.getMessage());
+            return;
         }
 
         if(u.getChatChannel() == ChatChannel.STAFF){

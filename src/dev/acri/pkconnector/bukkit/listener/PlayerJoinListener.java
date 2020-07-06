@@ -1,7 +1,9 @@
 package dev.acri.pkconnector.bukkit.listener;
 
+
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -21,5 +23,16 @@ public class PlayerJoinListener implements Listener {
                 e.getPlayer().getUniqueId().toString(),
                 e.getPlayer().getName()
         });
+
+        if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
+            com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+            if(es.getUser(e.getPlayer().getUniqueId()).isVanished())
+                Main.getInstance().getPkConnector().sendData(0x14, new String[]{
+                        e.getPlayer().getName(),
+                        "HIDE"
+                });
+        }
+
+
     }
 }

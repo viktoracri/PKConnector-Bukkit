@@ -1,5 +1,6 @@
 package dev.acri.pkconnector.bukkit.commands;
 
+import com.earth2me.essentials.Essentials;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
 import org.bukkit.Bukkit;
@@ -31,13 +32,19 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
         }else if(args[0].equalsIgnoreCase(sender.getName())) {
             sender.sendMessage("§cYou cannot message yourself. ☹");
 
-        }else if(Bukkit.getPlayer(args[0]) != null){
+        }
+        /*else if(Bukkit.getPlayer(args[0]) != null){
 
-            /*
-                    Local messaging if the target is locally online
-             */
+
+            //        Local messaging if the target is locally online
+
             User uSender = Main.getInstance().getUser((Player) sender);
             User uTarget = Main.getInstance().getUser(Bukkit.getPlayer(args[0]));
+
+            if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
+                Essentials es = (Essentials)Bukkit.getPluginManager().getPlugin("Essentials");
+
+            }
 
             uSender.setLastMessaged(uTarget.getPlayer().getName());
             uTarget.setLastMessaged(uSender.getPlayer().getName());
@@ -55,7 +62,10 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
                     .replaceAll("&", "§").replace("{player}", sender.getName())
                     .replace("{message}", message).replace("{server}", Main.getInstance().IDENTIFIER));
 
-        }else{
+
+        }
+        */
+        else{
 
             StringBuilder builder = new StringBuilder();
             for(int i = 1; i < args.length; i++)
