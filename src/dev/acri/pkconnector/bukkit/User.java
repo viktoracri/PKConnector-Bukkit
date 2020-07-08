@@ -14,6 +14,9 @@ public class User {
     private boolean accessStaffChat = false;
     private boolean accessVeteranChat = false;
     private boolean globalChatSendBanned = false;
+    private boolean adminAccess = false;
+
+    private boolean privateMessagesEnabled = true;
 
     private boolean nextMessageGlobalChat = false;
     private long lastMessageTime = -1;
@@ -31,6 +34,7 @@ public class User {
 
         List<Object> data = new ArrayList<>();
         data.add(player.getUniqueId().toString());
+        data.add(player.getName());
         data.add(globalChatEnabled);
         data.add(chatChannel.name());
 
@@ -117,5 +121,21 @@ public class User {
 
     public void setLastMessage(String lastMessage) {
         this.lastMessage = lastMessage;
+    }
+
+    public boolean isPrivateMessagesEnabled() {
+        return privateMessagesEnabled;
+    }
+
+    public void setPrivateMessagesEnabled(boolean privateMessagesEnabled) {
+        this.privateMessagesEnabled = privateMessagesEnabled;
+    }
+
+    public boolean hasAdminAccess() {
+        return adminAccess;
+    }
+
+    public void setAdminAccess(boolean adminAccess) {
+        this.adminAccess = adminAccess;
     }
 }

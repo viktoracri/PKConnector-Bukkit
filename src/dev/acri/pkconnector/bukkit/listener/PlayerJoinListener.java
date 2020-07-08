@@ -8,8 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class PlayerJoinListener implements Listener {
 
@@ -26,18 +24,19 @@ public class PlayerJoinListener implements Listener {
                 e.getPlayer().getName()
         });
 
-
+        // todo 0.8.10
         if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
-            com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
-            if(es.getUser(e.getPlayer().getUniqueId()).isVanished()){
+            Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+                if(es.getUser(e.getPlayer().getUniqueId()).isVanished()){
 
-                Main.getInstance().getPkConnector().sendData(0x14, new String[]{
-                        e.getPlayer().getName(),
-                        "HIDE"
-                });
+                    Main.getInstance().getPkConnector().sendData(0x14, new String[]{
+                            e.getPlayer().getName(),
+                            "HIDE"
+                    });
 
-            }
-
+                }
+            }, 10);
         }
 
 

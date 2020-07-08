@@ -26,6 +26,11 @@ public class GlobalReplyCommand implements TabCompleter, CommandExecutor {
             sender.sendMessage("§cOnly players can execute this command");
         }else{
             User u = Main.getInstance().getUser((Player) sender);
+
+            if(u.isPrivateMessagesEnabled()){
+                sender.sendMessage("§cYou have disabled private messages.");
+                return true;
+            }
             if(u.getLastMessaged().equals("")){
                 sender.sendMessage("§cYou don't have any players to reply to.");
                 return true;

@@ -134,7 +134,9 @@ public class ConnectionListener implements Runnable {
                     String reason = in.readUTF();
                     Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not connect. Reason: " + reason);
                     if(reason.contains("Unsupported version")){
-                        Main.getInstance().updatePlugin();
+                        if(Main.getInstance().getConfig().getBoolean("auto-update"))
+                            Main.getInstance().updatePlugin();
+                        else Bukkit.getConsoleSender().sendMessage("§c[PKConnector] You have disabled automatic updates. Please update the plugin manually to use PKConnector.");
                     }
                     Main.getInstance().getSocket().close();
                     Main.getInstance().getConnectionListenerThread().stop();
@@ -205,6 +207,8 @@ public class ConnectionListener implements Runnable {
                         u.setAccessVeteranChat(in.readBoolean());
                         u.setChatChannel(ChatChannel.get(in.readUTF()));
                         u.setGlobalChatSendBanned(in.readBoolean());
+                        u.setPrivateMessagesEnabled(in.readBoolean());
+                        u.setAdminAccess(in.readBoolean());
                     }
                     break;
                 case 0x9:
@@ -212,6 +216,9 @@ public class ConnectionListener implements Runnable {
                     String target = in.readUTF();
                     String answer = in.readUTF();
 
+                    if(target.contains("{AFK}")){
+                        target = target.replace("{AFK}", "") + " §7[AFK]";
+                    }
 
                     String format = "§a{target} §6is{P} §a{answer}§6.";
 
@@ -263,6 +270,7 @@ public class ConnectionListener implements Runnable {
                     String msg = in.readUTF();
                     server = in.readUTF();
                     String type = in.readUTF();
+
                     if(type.equals("FROM")){
                         Bukkit.getPlayer(to).sendMessage(Main.getInstance().getConfiguration().getString("Message.From").replaceAll("&", "§")
                                 .replace("{player}", from).replace("{message}", msg).replace("{server}", server));
@@ -276,6 +284,8 @@ public class ConnectionListener implements Runnable {
                         }
                         Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
 
+                    }else if(type.equals("DISABLED_PM")){
+                        Bukkit.getPlayer(from).sendMessage("§cPlayer has disabled private messages.");
                     }
 
                     break;
@@ -329,6 +339,47 @@ public class ConnectionListener implements Runnable {
                 case 0x10:
                     msg = in.readUTF();
                     Bukkit.broadcastMessage(msg);
+                    break;
+                case 0x17:
+                    message = in.readUTF();
+
+                    Bukkit.broadcastMessage(" ");
+                    Bukkit.broadcastMessage(" §e» §8§m-------§8> §6§lGlobal Announcement §8<§8§m-------");
+                    Bukkit.broadcastMessage(" §e» " + message);
+                    Bukkit.broadcastMessage("");
+
+                    break;
+                case 0x18:
+                    target = in.readUTF();
+                    String reply = in.readUTF();
+                    Player player1 = Bukkit.getPlayer(target);
+                    if(player1 != null){
+                        if(reply.equals("INVALID_PLAYER")){
+                            player1.sendMessage("§cCouldn't find player " + in.readUTF());
+                        }else if(reply.equals("BAN")){
+                            player1.sendMessage("§aPlayer " + in.readUTF() + " was " + (in.readBoolean() ? "" : "un") + "banned from global chat.");
+                        }else if(reply.equals("VETERAN")){
+                            String player2 = in.readUTF();
+                            player1.sendMessage(in.readBoolean() ? "§aPlayer " + player2 +" was granted access to Veteran chat!" :
+                                    "§aPlayer " + player2 +" no longer has access to Veteran chat.");
+                        }else if(reply.equals("STAFF")){
+                            String player2 = in.readUTF();
+                            player1.sendMessage(in.readBoolean() ? "§aPlayer " + player2 +" was granted access to Staff chat!" :
+                                    "§aPlayer " + player2 +" no longer has access to Staff chat.");
+                        }else if(reply.equals("INFO")){
+                            String player2 = in.readUTF();
+                            boolean veteranChat = in.readBoolean();
+                            boolean staffChat = in.readBoolean();
+                            boolean admin = in.readBoolean();
+                            boolean banned = in.readBoolean();
+
+                            player1.sendMessage("§6Information about §e" + player2 + "§6:");
+                            player1.sendMessage("§7- §eBanned from global chat: " + (banned ? "§atrue" : "§cfalse"));
+                            player1.sendMessage("§7- §eStaff: " + (staffChat ? "§atrue" : "§cfalse"));
+                            player1.sendMessage("§7- §eVeteran: " + (veteranChat ? "§atrue" : "§cfalse"));
+                            player1.sendMessage("§7- §eAdmin: " + (admin ? "§atrue" : "§cfalse"));
+                        }
+                    }
                     break;
 
             }

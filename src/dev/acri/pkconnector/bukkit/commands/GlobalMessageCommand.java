@@ -65,7 +65,9 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
 
         }
         */
-        else{
+        else if(!Main.getInstance().getUser((Player) sender).isPrivateMessagesEnabled()){
+            sender.sendMessage("§cYou have disabled private messages.");
+        }else{
 
             StringBuilder builder = new StringBuilder();
             for(int i = 1; i < args.length; i++)

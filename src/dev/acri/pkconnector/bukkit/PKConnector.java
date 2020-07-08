@@ -107,7 +107,7 @@ public class PKConnector {
 
     }
 
-    public void sendData(int b, String[] data){
+    public void sendData(int b, Object[] data){
         sendData(b, Arrays.asList(data));
 
     }

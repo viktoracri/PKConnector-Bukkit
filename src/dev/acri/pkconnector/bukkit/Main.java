@@ -1,11 +1,7 @@
 package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.commands.*;
-import dev.acri.pkconnector.bukkit.listener.CommandListener;
-import dev.acri.pkconnector.bukkit.listener.PlayerChatListener;
-import dev.acri.pkconnector.bukkit.listener.PlayerJoinListener;
-import dev.acri.pkconnector.bukkit.listener.PlayerQuitListener;
-import github.scarsz.discordsrv.util.PluginUtil;
+import dev.acri.pkconnector.bukkit.listener.*;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,15 +12,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
@@ -82,12 +73,17 @@ public class Main extends JavaPlugin {
         registerCommand("chat", ChatCommand.class);
         registerCommand("pklist", PKListCommand.class);
         registerCommand("pkservers", ConnectedServersCommand.class);
+        registerCommand("gmsgtoggle", GlobalMessageToggle.class);
+        registerCommand("pkadmin", ParkourAdminCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
-        Bukkit.getPluginManager().registerEvents(new CommandListener(), this);
 
+        if(Bukkit.getPluginManager().getPlugin("Essentials") != null) {
+            Bukkit.getPluginManager().registerEvents(new VanishChangeListener(), this);
+            Bukkit.getPluginManager().registerEvents(new AFKChangeListener(), this);
+        }
 
         for(Player all : Bukkit.getOnlinePlayers()) {
             userList.add(new User(all));
@@ -170,7 +166,8 @@ public class Main extends JavaPlugin {
         getConfig().addDefault("auto-disable-global-chat-on-join", false);
         getConfig().addDefault("new-users-disable-global-chat", false);
         getConfig().addDefault("bad-word-filter", Arrays.asList(
-                "fuck", "nigger", "n1gger", "fucking"));
+                "fuck", "shit", "blimey"));
+        getConfig().addDefault("auto-update", true);
 
 
         getConfig().options().copyDefaults(true);
@@ -250,6 +247,9 @@ public class Main extends JavaPlugin {
             return;
         }
 
+        for(User u : userList)
+            u.save();
+
 
         try {
             URL FILE_URL = new URL("https://honeyfrost.net/content/PKConnector/PKConnectorPlugin.jar");
@@ -264,7 +264,7 @@ public class Main extends JavaPlugin {
 
             Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading update...");
 
-            new File(DESTINATION).delete();
+            //new File(DESTINATION).delete();
 
             InputStream in = null;
             try{
@@ -273,7 +273,17 @@ public class Main extends JavaPlugin {
                 Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not download latest version");
                 return;
             }
-            Files.copy(in, new File(DESTINATION).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+
+//            //TODO fix this mess
+//            byte[] buffer = new byte[in.available()];
+//            in.read(buffer);
+//
+//            File f = new File(new File(DESTINATION).getParentFile().getAbsolutePath() + File.separator + "PKConnector-NEW.jar");
+//            ByteArrayOutputStream baos = new ByteArrayOutputStream(buffer.length);
+//            baos.write(buffer,0, buffer.length);
+//            baos.writeTo(new FileOutputStream(f));
+            Files.copy(in, new File(new File(DESTINATION).getParentFile().getAbsolutePath() + File.separator + "__NEW__PKConnectorPlugin.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
             Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Plugin updated.");
 
