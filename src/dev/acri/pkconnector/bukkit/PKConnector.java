@@ -18,6 +18,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PKConnector {
 
@@ -109,66 +111,72 @@ public class PKConnector {
         sendData(b, Arrays.asList(data));
 
     }
-    public void sendData(int b, List<Object> data){
-        try {
-            Socket socket = new Socket("honeyfrost.net", 6006);
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+    public void sendData(int b, List<Object> dataInput){
+        final List<Object> finalDataInput = dataInput;
+        ExecutorService ex = Executors.newSingleThreadExecutor();
+        ex.execute(() -> {
+            List<Object> data = finalDataInput;
+            try {
+                Socket socket = new Socket("honeyfrost.net", 6006);
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            if(data == null) data = new ArrayList<>();
+                if (data == null) data = new ArrayList<>();
 
-            out.writeByte(b);
+                out.writeByte(b);
 
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutputStream infoOut = new DataOutputStream(bos);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                DataOutputStream infoOut = new DataOutputStream(bos);
 
-            for(Object obj : data) {
-                if (obj instanceof String) infoOut.writeUTF((String) obj);
-                else if (obj instanceof Byte) infoOut.writeByte((Byte) obj);
-                else if (obj instanceof Short) infoOut.writeShort((Short) obj);
-                else if (obj instanceof Integer) infoOut.writeInt((Integer) obj);
-                else if (obj instanceof Long) infoOut.writeLong((Long) obj);
-                else if (obj instanceof Float) infoOut.writeFloat((Float) obj);
-                else if (obj instanceof Double) infoOut.writeDouble((Double) obj);
-                else if (obj instanceof Character) infoOut.writeChar((Character) obj);
-                else if (obj instanceof Boolean) infoOut.writeBoolean((Boolean) obj);
-            }
+                for (Object obj : data) {
+                    if (obj instanceof String) infoOut.writeUTF((String) obj);
+                    else if (obj instanceof Byte) infoOut.writeByte((Byte) obj);
+                    else if (obj instanceof Short) infoOut.writeShort((Short) obj);
+                    else if (obj instanceof Integer) infoOut.writeInt((Integer) obj);
+                    else if (obj instanceof Long) infoOut.writeLong((Long) obj);
+                    else if (obj instanceof Float) infoOut.writeFloat((Float) obj);
+                    else if (obj instanceof Double) infoOut.writeDouble((Double) obj);
+                    else if (obj instanceof Character) infoOut.writeChar((Character) obj);
+                    else if (obj instanceof Boolean) infoOut.writeBoolean((Boolean) obj);
+                }
 
-            infoOut.flush();
+                infoOut.flush();
 
 //            byte[] information = encrypt(bos.toByteArray());
 
-            KeyGenerator generator = KeyGenerator.getInstance("AES");
-            generator.init(128); // The AES key size in number of bits
-            SecretKey secKey = generator.generateKey();
+                KeyGenerator generator = KeyGenerator.getInstance("AES");
+                generator.init(128); // The AES key size in number of bits
+                SecretKey secKey = generator.generateKey();
 
-            Cipher aesCipher = Cipher.getInstance("AES");
-            aesCipher.init(Cipher.ENCRYPT_MODE, secKey);
-            byte[] information = aesCipher.doFinal(bos.toByteArray());
-            byte[] encryptedKey = encrypt(secKey.getEncoded(), publicKey);
-            out.writeShort(encryptedKey.length + information.length + 2);
-            out.write(encryptedKey);
-            out.writeShort(information.length);
-            out.write(information);
+                Cipher aesCipher = Cipher.getInstance("AES");
+                aesCipher.init(Cipher.ENCRYPT_MODE, secKey);
+                byte[] information = aesCipher.doFinal(bos.toByteArray());
+                byte[] encryptedKey = encrypt(secKey.getEncoded(), publicKey);
+                out.writeShort(encryptedKey.length + information.length + 2);
+                out.write(encryptedKey);
+                out.writeShort(information.length);
+                out.write(information);
 
 //            short length = (short) information.length;
 //            out.writeShort(information.length);
 //            out.write(information);
 
-            out.flush();
-            socket.close();
+                out.flush();
+                socket.close();
 
 //            System.out.println("Sent byte: 0x" + Integer.toHexString(b));
 //            System.out.println("Length: " + length + ", dataSize: " + data.size());
 
 
-        } catch (BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException | UnknownHostException e) {
-            System.out.println("Failed to send data: " + e.getMessage());
-        } catch (IOException e) {
-            if(e.getMessage().equals("Connection refused: connect")){
-                Main.getInstance().setSocket(null);
-                Main.getInstance().getPkConnector().setDisconnected(true);
+            } catch (BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException | UnknownHostException e) {
+                System.out.println("Failed to send data: " + e.getMessage());
+            } catch (IOException e) {
+                if (e.getMessage().equals("Connection refused: connect")) {
+                    Main.getInstance().setSocket(null);
+                    Main.getInstance().getPkConnector().setDisconnected(true);
+                }
             }
-        }
+        });
+        ex.shutdown();
     }
 
     public class HostWatcher implements Runnable{

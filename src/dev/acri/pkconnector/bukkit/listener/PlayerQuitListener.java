@@ -6,16 +6,22 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class PlayerQuitListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e){
         User u = Main.getInstance().getUser(e.getPlayer());
+
         u.save();
         Main.getInstance().getUserList().remove(u);
 
         Main.getInstance().getPkConnector().sendData(0x13, new String[]{
                 e.getPlayer().getUniqueId().toString()
         });
+
+
     }
 }

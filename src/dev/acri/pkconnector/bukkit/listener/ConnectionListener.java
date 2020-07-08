@@ -18,6 +18,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ConnectionListener implements Runnable {
 
@@ -110,12 +112,21 @@ public class ConnectionListener implements Runnable {
                     //Main.getInstance().getPkConnector().startThread();
                     Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[PKConnector] Authenticated as " + Main.getInstance().NAME + " with identifier " + Main.getInstance().IDENTIFIER);
                     Main.getInstance().getPkConnector().setDisconnected(false);
-
-                    for(Player all : Bukkit.getOnlinePlayers())
-                        Main.getInstance().getPkConnector().sendData(0x12, new String[]{
-                                all.getUniqueId().toString(),
-                                all.getName()
-                        });
+                    ExecutorService ex = Executors.newSingleThreadExecutor();
+                    ex.execute(() -> {
+                        for (Player all : Bukkit.getOnlinePlayers()) {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            Main.getInstance().getPkConnector().sendData(0x12, new String[]{
+                                    all.getUniqueId().toString(),
+                                    all.getName()
+                            });
+                        }
+                    });
+                    ex.shutdown();
                     break;
 
                 case 0x03: // Authentication denied

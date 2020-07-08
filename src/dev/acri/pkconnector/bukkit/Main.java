@@ -264,6 +264,7 @@ public class Main extends JavaPlugin {
 
             Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading update...");
 
+            new File(DESTINATION).delete();
 
             InputStream in = null;
             try{
