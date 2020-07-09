@@ -6,17 +6,14 @@ import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,9 +54,9 @@ public class ConnectionListener implements Runnable {
             length = in.readShort();
 //            System.out.println("Received 0x" + Integer.toHexString(initialByte) + ", length: " + length);
 
+
             byte[] b = new byte[length];
             while(in.available() < length){
-//                System.out.println("Available: " + in.available());
 
                 try {
                     Thread.sleep(20);
@@ -73,11 +70,8 @@ public class ConnectionListener implements Runnable {
 
             in = new DataInputStream(new ByteArrayInputStream(b));
 
-//            System.out.println(Arrays.toString(b));
-
             if(initialByte != 0x03) {
 
-                //int encryptedKeySize = in.readShort();
                 byte[] encryptedKey = new byte[256];
                 for(int i = 0; i < 256; i++){
                     encryptedKey[i] = (byte) in.read();
@@ -99,9 +93,7 @@ public class ConnectionListener implements Runnable {
                 b = aesCipher.doFinal(information);
 
 
-               // b = Main.getInstance().getPkConnector().decrypt(b);
             }
-//            System.out.println(Arrays.toString(b));
 
 
             in = new DataInputStream(new ByteArrayInputStream(b));
@@ -111,25 +103,9 @@ public class ConnectionListener implements Runnable {
                 case 0x02: // Authenticated successfully
                     Main.getInstance().NAME = in.readUTF();
                     Main.getInstance().IDENTIFIER = in.readUTF();
-                    //Main.getInstance().getPkConnector().startThread();
                     Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[PKConnector] Authenticated as " + Main.getInstance().NAME + " with identifier " + Main.getInstance().IDENTIFIER);
                     Main.getInstance().getPkConnector().setDisconnected(false);
                     ExecutorService ex = Executors.newSingleThreadExecutor();
-//                    ex.execute(() -> {
-//                        for (Player all : Bukkit.getOnlinePlayers()) {
-//                            try {
-//                                Thread.sleep(10);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                            Main.getInstance().getPkConnector().sendData(0x12, new String[]{
-//                                    all.getUniqueId().toString(),
-//                                    all.getName()
-//                            });
-//
-//
-//                        }
-//                    });
 
                     for(Player all : Bukkit.getOnlinePlayers())
                         Main.getInstance().getPkConnector().sendData(0x12, new String[]{
@@ -164,7 +140,6 @@ public class ConnectionListener implements Runnable {
                     break;
 
                 case 0x03: // Authentication denied
-                    //System.out.println("1");
                     String reason = in.readUTF();
                     Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not connect. Reason: " + reason);
                     if(reason.contains("Unsupported version")){
@@ -191,7 +166,6 @@ public class ConnectionListener implements Runnable {
                     String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
                             .replaceAll("\\{server}", identifier)
                             .replaceAll("\\{player}", player);
-
 
                      /*
                             Filter out bad words
@@ -228,7 +202,7 @@ public class ConnectionListener implements Runnable {
                     Bukkit.getConsoleSender().sendMessage("[Global Chat] " + finalMessage.replace("{message}", message));
 
                     break;
-                case 0x7:
+                case 0x7: // Player information
                     String uuid = in.readUTF();
                     if (Bukkit.getPlayer(UUID.fromString(uuid)) != null) {
                         User u = Main.getInstance().getUser(UUID.fromString(uuid));
@@ -245,7 +219,7 @@ public class ConnectionListener implements Runnable {
                         u.setAdminAccess(in.readBoolean());
                     }
                     break;
-                case 0x9:
+                case 0x9: // Find results
                     uuid = in.readUTF();
                     String target = in.readUTF();
                     String answer = in.readUTF();
@@ -270,7 +244,7 @@ public class ConnectionListener implements Runnable {
                         );
                     }
                         break;
-                case 0xa:
+                case 0xa: // /pklist result
 
                     uuid = in.readUTF();
                     String server = in.readUTF();
@@ -298,7 +272,7 @@ public class ConnectionListener implements Runnable {
 
 
                     break;
-                case 0xb:
+                case 0xb: // global private messages
                     String from = in.readUTF();
                     String to = in.readUTF();
                     String msg = in.readUTF();
@@ -323,7 +297,7 @@ public class ConnectionListener implements Runnable {
                     }
 
                     break;
-                case 0xc:
+                case 0xc: // pkservers
 
                     player = in.readUTF();
                     result = in.readUTF();
@@ -335,7 +309,7 @@ public class ConnectionListener implements Runnable {
 
 
                     break;
-                case 0xd:
+                case 0xd: // staff chat
                     identifier = in.readUTF();
                     player = in.readUTF();
                     message = in.readUTF();
@@ -346,7 +320,7 @@ public class ConnectionListener implements Runnable {
                     for(User u2 : Main.getInstance().getUserList())
                         if(u2.isAccessStaffChat()) u2.getPlayer().sendMessage(finalMessage);
                     break;
-                case 0xe:
+                case 0xe: // veteran chat
                     identifier = in.readUTF();
                     player = in.readUTF();
                     message = in.readUTF();
@@ -357,7 +331,7 @@ public class ConnectionListener implements Runnable {
                     for(User u1 : Main.getInstance().getUserList())
                         if(u1.isAccessVeteranChat()) u1.getPlayer().sendMessage(finalMessage);
                     break;
-                case 0xf:
+                case 0xf: // send message to individual player
                     String user = in.readUTF();
                     msg = in.readUTF();
                     p = null;
@@ -370,11 +344,11 @@ public class ConnectionListener implements Runnable {
 
                     if(p != null) p.sendMessage(msg.replace("&", "§"));
                     break;
-                case 0x10:
+                case 0x10: // broadcast message
                     msg = in.readUTF();
                     Bukkit.broadcastMessage(msg);
                     break;
-                case 0x17:
+                case 0x17: // global announcement
                     message = in.readUTF();
 
                     Bukkit.broadcastMessage(" ");
@@ -382,7 +356,7 @@ public class ConnectionListener implements Runnable {
                     Bukkit.broadcastMessage("");
 
                     break;
-                case 0x18:
+                case 0x18: // PKAdmin results
                     target = in.readUTF();
                     String reply = in.readUTF();
                     Player player1 = Bukkit.getPlayer(target);
@@ -414,7 +388,7 @@ public class ConnectionListener implements Runnable {
                         }
                     }
                     break;
-                case 0x19:
+                case 0x19: // Role updates
                     type = in.readUTF();
                     boolean value = in.readBoolean();
                     target = in.readUTF();
@@ -459,7 +433,6 @@ public class ConnectionListener implements Runnable {
             if(System.currentTimeMillis() - disconnected > 3000) Main.getInstance().getPkConnector().setDisconnected(true);
         } catch (NoSuchPaddingException | InvalidKeyException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException e) {
             e.printStackTrace();
-            System.out.println("Initialbyte: 0x" + Integer.toHexString(initialByte) + ", length: " + length);
         }
     }
 

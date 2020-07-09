@@ -1,7 +1,6 @@
 package dev.acri.pkconnector.bukkit.commands;
 
 import dev.acri.pkconnector.bukkit.Main;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,9 +23,6 @@ public class FindCommand implements TabCompleter, CommandExecutor {
             sender.sendMessage("§cUsage: §7/findplayer <player>");
             sender.sendMessage("§cFind what parkour server a player is playing on");
         }
-        /*else if(Bukkit.getPlayer(args[0]) != null){
-            sender.sendMessage("§a" + Bukkit.getPlayer(args[0]).getName() + "§6 is online on §a" + Main.getInstance().NAME);
-        }*/
         else{
 
             List<Object> data = new ArrayList<>();

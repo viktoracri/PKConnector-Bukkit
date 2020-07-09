@@ -2,15 +2,11 @@ package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.listener.ConnectionListener;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import javax.crypto.*;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.*;
@@ -22,8 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class PKConnector {
-
-    private UUID sessionID;
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
@@ -60,7 +54,6 @@ public class PKConnector {
 
         try {
             Socket socket = new Socket("honeyfrost.net", 6006);
-           // socket.setKeepAlive(true);
             Main.getInstance().setSocket(socket);
 
             DataOutputStream out = new DataOutputStream(Main.getInstance().getSocket().getOutputStream());
@@ -69,11 +62,11 @@ public class PKConnector {
 
             out.write(0x01);
             out.writeShort(username.length()+2 + 256+ Main.getInstance().getDescription().getVersion().length() + 2);
-            out.writeUTF(Main.getInstance().getDescription().getVersion());
+            out.writeUTF(Main.version);
             out.writeUTF(username);
             out.write(encrypt(password.getBytes(), publicKey));
 
-//            out.flush();
+            // todo Is it out.flush?
 
             Bukkit.getConsoleSender().sendMessage("§a[PKConnector] Authenticating...");
 
@@ -105,11 +98,6 @@ public class PKConnector {
             Main.getInstance().getSocket().close();
         } catch (IOException | NullPointerException ignored) {
         }
-    }
-
-    public void sendByte(int b){
-        sendData(b, new String[0]);
-
     }
 
     public void sendData(int b, Object[] data){
@@ -146,8 +134,6 @@ public class PKConnector {
 
                 infoOut.flush();
 
-//            byte[] information = encrypt(bos.toByteArray());
-
                 KeyGenerator generator = KeyGenerator.getInstance("AES");
                 generator.init(128); // The AES key size in number of bits
                 SecretKey secKey = generator.generateKey();
@@ -161,15 +147,12 @@ public class PKConnector {
                 out.writeShort(information.length);
                 out.write(information);
 
-           // short length = (short) information.length;
-//            out.writeShort(information.length);
-//            out.write(information);
-
                 out.flush();
                 socket.close();
 
 //            System.out.println("Sent byte: 0x" + Integer.toHexString(b));
 //            System.out.println("Length: " + information.length + ", dataSize: " + data.size());
+
 
 
             } catch (BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException | UnknownHostException e) {
@@ -214,13 +197,6 @@ public class PKConnector {
 
     }
 
-    public UUID getSessionID() {
-        return sessionID;
-    }
-
-    public void setSessionID(String sessionID) {
-        this.sessionID = UUID.fromString(sessionID);
-    }
 
     public boolean isDisconnected() {
         return disconnected;

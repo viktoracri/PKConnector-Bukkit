@@ -11,7 +11,6 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 public class PKConnectorCommand implements TabCompleter, CommandExecutor {
     @Override

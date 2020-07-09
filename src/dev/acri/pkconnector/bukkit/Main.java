@@ -11,13 +11,13 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
+    public static final String version = "0.9.3";
     private static Main instance;
     private Socket socket;
 
@@ -37,6 +38,7 @@ public class Main extends JavaPlugin {
 
     public String NAME = "Unknown Name";
     public String IDENTIFIER = "????";
+
 
     private Thread connectionListenerThread;
 
@@ -245,12 +247,8 @@ public class Main extends JavaPlugin {
     }
 
     public void updatePlugin(){
-/*
-        if(System.getProperty("os.name").contains("Windows")){
-            Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Auto-Update does not work on Windows operating systems. You need to manually update the plugin.");
-            return;
-        }
- */
+
+        // todo Less console output and more practical information
 
         for(User u : userList)
             u.save();
@@ -303,6 +301,9 @@ public class Main extends JavaPlugin {
         }
     }
 
+    /*
+        Taken from PlugMan
+     */
     public static void unload(Plugin plugin) {
 
         String name = plugin.getName();

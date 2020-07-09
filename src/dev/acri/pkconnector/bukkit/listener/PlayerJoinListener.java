@@ -24,7 +24,6 @@ public class PlayerJoinListener implements Listener {
                 e.getPlayer().getName()
         });
 
-        // todo 0.8.10
         if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                 com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");

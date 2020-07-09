@@ -1,6 +1,5 @@
 package dev.acri.pkconnector.bukkit.commands;
 
-import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
 import org.bukkit.command.Command;
