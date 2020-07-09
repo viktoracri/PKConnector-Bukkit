@@ -24,8 +24,8 @@ public class GlobalMessageToggle implements TabCompleter, CommandExecutor {
 
         u.setPrivateMessagesEnabled(!u.isPrivateMessagesEnabled());
         sender.sendMessage(
-                u.isPrivateMessagesEnabled() ? "§aPrivate messages enabled"
-                        : "§cPrivate messages disabled"
+                u.isPrivateMessagesEnabled() ? "§aGlobal private messages enabled"
+                        : "§cGlobal private messages disabled"
         );
 
         Main.getInstance().getPkConnector().sendData(0x16, new Object[]{

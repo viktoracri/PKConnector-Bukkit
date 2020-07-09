@@ -91,6 +91,11 @@ public class PKConnector {
     }
 
     public void startThread(){
+        try {
+            Class.forName("dev.acri.pkconnector.bukkit.PKConnector$HostWatcher");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
         hostWatcherThread = new Thread(new HostWatcher(), "Thread-HostWatcher");
         hostWatcherThread.start();
     }
@@ -156,7 +161,7 @@ public class PKConnector {
                 out.writeShort(information.length);
                 out.write(information);
 
-//            short length = (short) information.length;
+           // short length = (short) information.length;
 //            out.writeShort(information.length);
 //            out.write(information);
 
@@ -164,7 +169,7 @@ public class PKConnector {
                 socket.close();
 
 //            System.out.println("Sent byte: 0x" + Integer.toHexString(b));
-//            System.out.println("Length: " + length + ", dataSize: " + data.size());
+//            System.out.println("Length: " + information.length + ", dataSize: " + data.size());
 
 
             } catch (BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException | UnknownHostException e) {

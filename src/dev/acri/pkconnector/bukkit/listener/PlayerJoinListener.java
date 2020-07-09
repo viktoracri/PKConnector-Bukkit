@@ -28,14 +28,15 @@ public class PlayerJoinListener implements Listener {
         if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                 com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
-                if(es.getUser(e.getPlayer().getUniqueId()).isVanished()){
+                com.earth2me.essentials.User user = es.getUser(e.getPlayer().getUniqueId());
+                if(user.isVanished()){
 
                     Main.getInstance().getPkConnector().sendData(0x14, new String[]{
                             e.getPlayer().getName(),
                             "HIDE"
                     });
-
                 }
+
             }, 10);
         }
 

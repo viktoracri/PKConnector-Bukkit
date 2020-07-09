@@ -2,6 +2,7 @@ package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.commands.*;
 import dev.acri.pkconnector.bukkit.listener.*;
+import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,6 +16,8 @@ import java.lang.reflect.Field;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -73,7 +76,7 @@ public class Main extends JavaPlugin {
         registerCommand("chat", ChatCommand.class);
         registerCommand("pklist", PKListCommand.class);
         registerCommand("pkservers", ConnectedServersCommand.class);
-        registerCommand("gmsgtoggle", GlobalMessageToggle.class);
+        registerCommand("togglegmsg", GlobalMessageToggle.class);
         registerCommand("pkadmin", ParkourAdminCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
@@ -242,10 +245,12 @@ public class Main extends JavaPlugin {
     }
 
     public void updatePlugin(){
+/*
         if(System.getProperty("os.name").contains("Windows")){
             Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Auto-Update does not work on Windows operating systems. You need to manually update the plugin.");
             return;
         }
+ */
 
         for(User u : userList)
             u.save();
@@ -264,26 +269,9 @@ public class Main extends JavaPlugin {
 
             Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading update...");
 
-            //new File(DESTINATION).delete();
-
-            InputStream in = null;
-            try{
-               in = FILE_URL.openStream();
-            }catch(IOException e){
-                Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not download latest version");
-                return;
-            }
-
-
-//            //TODO fix this mess
-//            byte[] buffer = new byte[in.available()];
-//            in.read(buffer);
-//
-//            File f = new File(new File(DESTINATION).getParentFile().getAbsolutePath() + File.separator + "PKConnector-NEW.jar");
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream(buffer.length);
-//            baos.write(buffer,0, buffer.length);
-//            baos.writeTo(new FileOutputStream(f));
-            Files.copy(in, new File(new File(DESTINATION).getParentFile().getAbsolutePath() + File.separator + "__NEW__PKConnectorPlugin.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            System.out.println(DESTINATION);
+            final String pathname = DESTINATION.substring(0, DESTINATION.lastIndexOf("/")) + "/__NEW__PKConnectorPlugin.jar";
+            FileUtils.copyURLToFile(FILE_URL, new File(pathname));
 
             Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Plugin updated.");
 

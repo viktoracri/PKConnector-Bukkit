@@ -42,17 +42,19 @@ public class ConnectionListener implements Runnable {
     }
 
     public void readInputStream(){
+        int initialByte = -1;
+        short length = -1;
         try {
 
             DataInputStream in = new DataInputStream(Main.getInstance().getSocket().getInputStream());
 
-            int initialByte = in.readByte();
+            initialByte = in.readByte();
             if(disconnected != -1) disconnected = -1;
 
             if(initialByte == 0x05 || initialByte == -1 || initialByte == 0x00) return;
 
 
-            short length = in.readShort();
+            length = in.readShort();
 //            System.out.println("Received 0x" + Integer.toHexString(initialByte) + ", length: " + length);
 
             byte[] b = new byte[length];
@@ -113,19 +115,51 @@ public class ConnectionListener implements Runnable {
                     Main.getInstance().getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[PKConnector] Authenticated as " + Main.getInstance().NAME + " with identifier " + Main.getInstance().IDENTIFIER);
                     Main.getInstance().getPkConnector().setDisconnected(false);
                     ExecutorService ex = Executors.newSingleThreadExecutor();
-                    ex.execute(() -> {
-                        for (Player all : Bukkit.getOnlinePlayers()) {
-                            try {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+//                    ex.execute(() -> {
+//                        for (Player all : Bukkit.getOnlinePlayers()) {
+//                            try {
+//                                Thread.sleep(10);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                            Main.getInstance().getPkConnector().sendData(0x12, new String[]{
+//                                    all.getUniqueId().toString(),
+//                                    all.getName()
+//                            });
+//
+//
+//                        }
+//                    });
+
+                    for(Player all : Bukkit.getOnlinePlayers())
+                        Main.getInstance().getPkConnector().sendData(0x12, new String[]{
+                                all.getUniqueId().toString(),
+                                all.getName()
+                        });
+
+                    if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
+                        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                            com.earth2me.essentials.Essentials es = (com.earth2me.essentials.Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
+                            for(Player all : Bukkit.getOnlinePlayers()){
+                                com.earth2me.essentials.User user = es.getUser(all.getUniqueId());
+                                if(user.isVanished()){
+
+                                    Main.getInstance().getPkConnector().sendData(0x14, new String[]{
+                                            all.getName(),
+                                            "HIDE"
+                                    });
+                                }
+                                if(user.isAfk()){
+                                    Main.getInstance().getPkConnector().sendData(0x15, new String[]{
+                                            all.getName(),
+                                            "AFK"
+                                    });
+                                }
                             }
-                            Main.getInstance().getPkConnector().sendData(0x12, new String[]{
-                                    all.getUniqueId().toString(),
-                                    all.getName()
-                            });
-                        }
-                    });
+
+
+                        }, 10);
+                    }
                     ex.shutdown();
                     break;
 
@@ -285,7 +319,7 @@ public class ConnectionListener implements Runnable {
                         Main.getInstance().getUser(Bukkit.getPlayer(from)).setLastMessaged(to);
 
                     }else if(type.equals("DISABLED_PM")){
-                        Bukkit.getPlayer(from).sendMessage("§cPlayer has disabled private messages.");
+                        Bukkit.getPlayer(from).sendMessage("§cPlayer has disabled global private messages.");
                     }
 
                     break;
@@ -344,8 +378,7 @@ public class ConnectionListener implements Runnable {
                     message = in.readUTF();
 
                     Bukkit.broadcastMessage(" ");
-                    Bukkit.broadcastMessage(" §e» §8§m-------§8> §6§lGlobal Announcement §8<§8§m-------");
-                    Bukkit.broadcastMessage(" §e» " + message);
+                    Bukkit.broadcastMessage(" §8§l» §6§lGlobal Announcement §8§l» §e" + message.replaceAll("&", "§"));
                     Bukkit.broadcastMessage("");
 
                     break;
@@ -381,7 +414,42 @@ public class ConnectionListener implements Runnable {
                         }
                     }
                     break;
+                case 0x19:
+                    type = in.readUTF();
+                    boolean value = in.readBoolean();
+                    target = in.readUTF();
+                    Player targetPlayer = Bukkit.getPlayer(target);
+                    if(targetPlayer == null)return;
+                    User u = Main.getInstance().getUser(targetPlayer);
 
+                    if(type.equals("BAN")){ // Ban
+                        u.setGlobalChatSendBanned(value);
+                        if(u.getChatChannel().equals(ChatChannel.GLOBAL)) u.setChatChannel(ChatChannel.NORMAL);
+                        targetPlayer.sendMessage(value ?
+                                "§aYou were banned from global chat!"
+                                : "§aYou were unbanned from global chat.");
+                    }else if(type.equals("STAFF")){ // Staff
+                        u.setAccessStaffChat(value);
+                        if(u.getChatChannel().equals(ChatChannel.STAFF)) u.setChatChannel(ChatChannel.NORMAL);
+                        targetPlayer.sendMessage(value ?
+                                "§aYou were given access to staff chat!"
+                                : "§aYou no longer have access to staff chat.");
+                    }else if(type.equals("VET")){ // Veteran
+                        u.setAccessVeteranChat(value);
+                        if(u.getChatChannel().equals(ChatChannel.VETERAN)) u.setChatChannel(ChatChannel.NORMAL);
+                        targetPlayer.sendMessage(value ?
+                                "§aYou were given access to veteran chat!"
+                                : "§aYou no longer have access to veteran chat.");
+                    }else if(type.equals("ADMIN")){ // Admin
+                        u.setAdminAccess(value);
+
+                        targetPlayer.sendMessage(value ?
+                                "§aYou are now an admin."
+                                : "§aYou are no longer an admin");
+                    }
+
+
+                    break;
             }
 
 
@@ -389,8 +457,9 @@ public class ConnectionListener implements Runnable {
         } catch (IOException ignored) {
             if(disconnected == -1) disconnected = System.currentTimeMillis();
             if(System.currentTimeMillis() - disconnected > 3000) Main.getInstance().getPkConnector().setDisconnected(true);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
+        } catch (NoSuchPaddingException | InvalidKeyException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException e) {
             e.printStackTrace();
+            System.out.println("Initialbyte: 0x" + Integer.toHexString(initialByte) + ", length: " + length);
         }
     }
 
