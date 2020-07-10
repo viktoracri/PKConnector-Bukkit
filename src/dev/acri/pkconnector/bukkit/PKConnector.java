@@ -66,7 +66,6 @@ public class PKConnector {
             out.writeUTF(username);
             out.write(encrypt(password.getBytes(), publicKey));
 
-            // todo Is it out.flush?
 
             Bukkit.getConsoleSender().sendMessage("§a[PKConnector] Authenticating...");
 

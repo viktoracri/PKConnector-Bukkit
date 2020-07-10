@@ -109,7 +109,6 @@ public class Main extends JavaPlugin {
         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             Plugin p = Bukkit.getPluginManager().getPlugin("PKConnectorReloader");
             if(p != null){
-                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Cleaning up...");
                 String PLUGIN_FILE = p.getClass().getProtectionDomain()
                         .getCodeSource()
                         .getLocation()
@@ -118,7 +117,7 @@ public class Main extends JavaPlugin {
 
                 new File(PLUGIN_FILE).delete();
 
-                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Successfully updated to version " + getDescription().getVersion() + "!");
+                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Successfully updated to PKConnector version " + getDescription().getVersion() + "!");
             }
         }, 40);
 
@@ -247,8 +246,6 @@ public class Main extends JavaPlugin {
 
     public void updatePlugin(){
 
-        // todo Less console output and more practical information
-
         for(User u : userList)
             u.save();
 
@@ -270,12 +267,7 @@ public class Main extends JavaPlugin {
             final String pathname = DESTINATION.substring(0, DESTINATION.lastIndexOf("/")) + "/__NEW__PKConnectorPlugin.jar";
             FileUtils.copyURLToFile(FILE_URL, new File(pathname));
 
-            Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Plugin updated.");
-
-
-            Thread t = new Thread(() -> {
-                Bukkit.getConsoleSender().sendMessage("§e[PKConnector] Downloading external plugin reloader");
-                try {
+            Thread t = new Thread(() -> { try {
                     InputStream ex_in = null;
                     try{
                         ex_in= EXTERNAL_RELOADER.openStream();
@@ -285,12 +277,13 @@ public class Main extends JavaPlugin {
                     }
 
                     Files.copy(ex_in, Paths.get(RELOADER_DESTINATION), StandardCopyOption.REPLACE_EXISTING);
-                    Bukkit.getConsoleSender().sendMessage("§e[PKConnector] External plugin reloader downloaded");
+
                     Bukkit.getPluginManager().loadPlugin(new File(RELOADER_DESTINATION));
                     Bukkit.getPluginManager().enablePlugin(Bukkit.getPluginManager().getPlugin("PKConnectorReloader"));
 
                 } catch (IOException | InvalidPluginException | InvalidDescriptionException e) {
                     e.printStackTrace();
+                    Bukkit.getConsoleSender().sendMessage("§c[PKConnector] Could not download reloader. Restart the server to apply the update.");
                 }
             }, "PluginReloader");
             t.start();
