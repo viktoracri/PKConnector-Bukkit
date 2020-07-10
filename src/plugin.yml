@@ -13,13 +13,13 @@ commands:
     description: Set your current chat channel
     aliases: chat
   cg:
-    description: Chat global
+    description: Chat in the global chat channel
   cn:
-    description: Chat normal
+    description: Chat normally
   cs:
-    description: Chat staff
+    description: Chat in the staff chat channel
   cv:
-    description: Chat veteran
+    description: Chat in the veteran chat channel
   gr:
     description: Reply to a message globally
   findplayer:

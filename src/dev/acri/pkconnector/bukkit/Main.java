@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.9.5";
+    public static final String version = "0.9.6";
     private static Main instance;
     private Socket socket;
 
