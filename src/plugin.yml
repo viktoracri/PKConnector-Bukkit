@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.9.3
+version: 0.9.5
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -33,5 +33,3 @@ commands:
     description: Show servers currently connected to PKConnector
   togglegmsg:
     description: Toggle global private messages
-  pkadmin:
-    description: For PKConnector admins

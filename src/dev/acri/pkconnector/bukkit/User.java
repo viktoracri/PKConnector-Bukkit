@@ -14,13 +14,13 @@ public class User {
     private boolean accessStaffChat = false;
     private boolean accessVeteranChat = false;
     private boolean globalChatSendBanned = false;
-    private boolean adminAccess = false;
 
     private boolean privateMessagesEnabled = true;
 
     private boolean nextMessageGlobalChat = false;
     private long lastMessageTime = -1;
     private String lastMessage = "";
+
 
     public User(Player player){
         this.player = player;
@@ -129,13 +129,5 @@ public class User {
 
     public void setPrivateMessagesEnabled(boolean privateMessagesEnabled) {
         this.privateMessagesEnabled = privateMessagesEnabled;
-    }
-
-    public boolean hasAdminAccess() {
-        return adminAccess;
-    }
-
-    public void setAdminAccess(boolean adminAccess) {
-        this.adminAccess = adminAccess;
     }
 }

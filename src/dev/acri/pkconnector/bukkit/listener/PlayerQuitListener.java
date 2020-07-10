@@ -2,6 +2,7 @@ package dev.acri.pkconnector.bukkit.listener;
 
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -15,9 +16,11 @@ public class PlayerQuitListener implements Listener {
         u.save();
         Main.getInstance().getUserList().remove(u);
 
-        Main.getInstance().getPkConnector().sendData(0x13, new String[]{
-                e.getPlayer().getUniqueId().toString()
-        });
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            Main.getInstance().getPkConnector().sendData(0x13, new String[]{
+                    e.getPlayer().getUniqueId().toString()
+            });
+        }, 5);
 
 
     }

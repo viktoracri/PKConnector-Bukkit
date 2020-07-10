@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.9.3";
+    public static final String version = "0.9.5";
     private static Main instance;
     private Socket socket;
 
@@ -79,7 +79,6 @@ public class Main extends JavaPlugin {
         registerCommand("pklist", PKListCommand.class);
         registerCommand("pkservers", ConnectedServersCommand.class);
         registerCommand("togglegmsg", GlobalMessageToggle.class);
-        registerCommand("pkadmin", ParkourAdminCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);

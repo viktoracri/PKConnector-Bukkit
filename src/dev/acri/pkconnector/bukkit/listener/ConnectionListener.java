@@ -216,7 +216,6 @@ public class ConnectionListener implements Runnable {
                         u.setChatChannel(ChatChannel.get(in.readUTF()));
                         u.setGlobalChatSendBanned(in.readBoolean());
                         u.setPrivateMessagesEnabled(in.readBoolean());
-                        u.setAdminAccess(in.readBoolean());
                     }
                     break;
                 case 0x9: // Find results
@@ -356,38 +355,6 @@ public class ConnectionListener implements Runnable {
                     Bukkit.broadcastMessage("");
 
                     break;
-                case 0x18: // PKAdmin results
-                    target = in.readUTF();
-                    String reply = in.readUTF();
-                    Player player1 = Bukkit.getPlayer(target);
-                    if(player1 != null){
-                        if(reply.equals("INVALID_PLAYER")){
-                            player1.sendMessage("§cCouldn't find player " + in.readUTF());
-                        }else if(reply.equals("BAN")){
-                            player1.sendMessage("§aPlayer " + in.readUTF() + " was " + (in.readBoolean() ? "" : "un") + "banned from global chat.");
-                        }else if(reply.equals("VETERAN")){
-                            String player2 = in.readUTF();
-                            player1.sendMessage(in.readBoolean() ? "§aPlayer " + player2 +" was granted access to Veteran chat!" :
-                                    "§aPlayer " + player2 +" no longer has access to Veteran chat.");
-                        }else if(reply.equals("STAFF")){
-                            String player2 = in.readUTF();
-                            player1.sendMessage(in.readBoolean() ? "§aPlayer " + player2 +" was granted access to Staff chat!" :
-                                    "§aPlayer " + player2 +" no longer has access to Staff chat.");
-                        }else if(reply.equals("INFO")){
-                            String player2 = in.readUTF();
-                            boolean veteranChat = in.readBoolean();
-                            boolean staffChat = in.readBoolean();
-                            boolean admin = in.readBoolean();
-                            boolean banned = in.readBoolean();
-
-                            player1.sendMessage("§6Information about §e" + player2 + "§6:");
-                            player1.sendMessage("§7- §eBanned from global chat: " + (banned ? "§atrue" : "§cfalse"));
-                            player1.sendMessage("§7- §eStaff: " + (staffChat ? "§atrue" : "§cfalse"));
-                            player1.sendMessage("§7- §eVeteran: " + (veteranChat ? "§atrue" : "§cfalse"));
-                            player1.sendMessage("§7- §eAdmin: " + (admin ? "§atrue" : "§cfalse"));
-                        }
-                    }
-                    break;
                 case 0x19: // Role updates
                     type = in.readUTF();
                     boolean value = in.readBoolean();
@@ -414,12 +381,6 @@ public class ConnectionListener implements Runnable {
                         targetPlayer.sendMessage(value ?
                                 "§aYou were given access to veteran chat!"
                                 : "§aYou no longer have access to veteran chat.");
-                    }else if(type.equals("ADMIN")){ // Admin
-                        u.setAdminAccess(value);
-
-                        targetPlayer.sendMessage(value ?
-                                "§aYou are now an admin."
-                                : "§aYou are no longer an admin");
                     }
 
 

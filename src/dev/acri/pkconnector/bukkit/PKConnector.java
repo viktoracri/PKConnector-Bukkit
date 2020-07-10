@@ -110,9 +110,8 @@ public class PKConnector {
         ex.execute(() -> {
             List<Object> data = finalDataInput;
             try {
-                Socket socket = new Socket("honeyfrost.net", 6006);
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                DataOutputStream out = new DataOutputStream(baos);
                 if (data == null) data = new ArrayList<>();
 
                 out.writeByte(b);
@@ -148,6 +147,13 @@ public class PKConnector {
                 out.write(information);
 
                 out.flush();
+
+                Socket socket = new Socket("honeyfrost.net", 6006);
+                DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
+
+                socketOut.write(baos.toByteArray());
+
+                socketOut.flush();
                 socket.close();
 
 //            System.out.println("Sent byte: 0x" + Integer.toHexString(b));
