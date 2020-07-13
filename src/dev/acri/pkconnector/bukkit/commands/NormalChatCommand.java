@@ -1,5 +1,6 @@
 package dev.acri.pkconnector.bukkit.commands;
 
+import dev.acri.pkconnector.bukkit.Main;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,6 +31,7 @@ public class NormalChatCommand implements TabCompleter, CommandExecutor {
 
             String message = builder.toString().substring(0, builder.toString().length() - 1);
 
+            Main.getInstance().getUser((Player) sender).setNextMessageNormalChat(true);
             ((Player) sender).chat("§3§4" + message);
         }
 

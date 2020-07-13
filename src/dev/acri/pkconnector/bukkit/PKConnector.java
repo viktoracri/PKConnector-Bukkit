@@ -132,6 +132,7 @@ public class PKConnector {
 
                 infoOut.flush();
 
+
                 KeyGenerator generator = KeyGenerator.getInstance("AES");
                 generator.init(128); // The AES key size in number of bits
                 SecretKey secKey = generator.generateKey();
@@ -153,10 +154,9 @@ public class PKConnector {
                 socketOut.write(baos.toByteArray());
 
                 socketOut.flush();
+                out.close();
                 socket.close();
-
-//            System.out.println("Sent byte: 0x" + Integer.toHexString(b));
-//            System.out.println("Length: " + information.length + ", dataSize: " + data.size());
+                infoOut.close();
 
 
 

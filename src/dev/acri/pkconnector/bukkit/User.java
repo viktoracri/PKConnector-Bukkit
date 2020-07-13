@@ -18,6 +18,8 @@ public class User {
     private boolean privateMessagesEnabled = true;
 
     private boolean nextMessageGlobalChat = false;
+    private boolean nextMessageNormalChat = false;
+
     private long lastMessageTime = -1;
     private String lastMessage = "";
 
@@ -129,5 +131,13 @@ public class User {
 
     public void setPrivateMessagesEnabled(boolean privateMessagesEnabled) {
         this.privateMessagesEnabled = privateMessagesEnabled;
+    }
+
+    public boolean isNextMessageNormalChat() {
+        return nextMessageNormalChat;
+    }
+
+    public void setNextMessageNormalChat(boolean nextMessageNormalChat) {
+        this.nextMessageNormalChat = nextMessageNormalChat;
     }
 }

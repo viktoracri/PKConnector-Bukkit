@@ -21,8 +21,13 @@ public class PlayerChatListener implements Listener {
             return;
         }
 
+        if(u.isNextMessageNormalChat()){
+            u.setNextMessageNormalChat(false);
+            return;
+        }
 
-        else if(u.getChatChannel() == ChatChannel.GLOBAL || u.isNextMessageGlobalChat()){
+
+        if((u.getChatChannel() == ChatChannel.GLOBAL || u.isNextMessageGlobalChat())){
             if(u.isNextMessageGlobalChat())u.setNextMessageGlobalChat(false);
             e.setCancelled(true);
             if(!u.isGlobalChatEnabled()){

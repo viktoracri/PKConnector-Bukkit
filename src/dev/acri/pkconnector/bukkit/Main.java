@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.9.6";
+    public static final String version = "0.10.3";
     private static Main instance;
     private Socket socket;
 
@@ -171,7 +171,7 @@ public class Main extends JavaPlugin {
         getConfig().addDefault("bad-word-filter", Arrays.asList(
                 "fuck", "shit", "blimey"));
         getConfig().addDefault("auto-update", true);
-
+        getConfig().addDefault("community-announcements", true);
 
         getConfig().options().copyDefaults(true);
         saveConfig();
