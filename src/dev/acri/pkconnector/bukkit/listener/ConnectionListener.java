@@ -14,6 +14,7 @@ import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,6 +108,9 @@ public class ConnectionListener implements Runnable {
                                     all.getUniqueId().toString(),
                                     all.getName()
                             });
+
+                        if(!Main.getInstance().getConfig().getBoolean("global-private-messages-enabled"))
+                            Main.getInstance().getPkConnector().sendData(0x1b, Collections.singletonList("DISABLED_PM"));
 
                         if(Bukkit.getPluginManager().getPlugin("Essentials") != null){
                             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
@@ -287,6 +291,8 @@ public class ConnectionListener implements Runnable {
 
                         }else if(type.equals("DISABLED_PM")){
                             Bukkit.getPlayer(from).sendMessage("§cPlayer has disabled global private messages.");
+                        }else if(type.equals("SERVER_DISABLED_PM")){
+                            Bukkit.getPlayer(from).sendMessage("§cThe server the player is on has disabled global private messages.");
                         }
 
                         break;
@@ -381,6 +387,20 @@ public class ConnectionListener implements Runnable {
 
 
                         break;
+                    case 0x1a:
+                        uuid = in.readUTF();
+                        server = in.readUTF();
+
+
+                        p = Bukkit.getPlayer(UUID.fromString(uuid));
+                        if(p != null){
+                            if(server.contains("{NOT_FOUND}")){
+                                p.sendMessage("§cCould not find server '" + server.replace("{NOT_FOUND}", "") + "'");
+                            }else{
+                                String ip = in.readUTF();
+                                p.sendMessage("§6" + server + "§e ip address: §6" + (!ip.equals("") ? ip : "§cNot assigned"));
+                            }
+                        }
                 }
             }
 

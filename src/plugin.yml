@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.10.3
+version: 0.10.8
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -33,3 +33,7 @@ commands:
     description: Show servers currently connected to PKConnector
   togglegmsg:
     description: Toggle global private messages
+  pkip:
+    description: Get the public IP address of a parkour server
+  pkdiscord:
+    description: Get an invite to the pk community discord

@@ -67,6 +67,7 @@ public class PKConnector {
             out.write(encrypt(password.getBytes(), publicKey));
 
 
+
             Bukkit.getConsoleSender().sendMessage("§a[PKConnector] Authenticating...");
 
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {

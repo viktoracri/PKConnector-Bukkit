@@ -21,6 +21,11 @@ public class GlobalMessageCommand implements TabCompleter, CommandExecutor {
             return true;
         }
 
+        if(!Main.getInstance().getConfig().getBoolean("global-private-messages-enabled")){
+            sender.sendMessage("§cThis server has disabled global private messages.");
+            return true;
+        }
+
         if(args.length < 2){
             sender.sendMessage("§cUsage: §7/" + label + " <player> <message>");
             sender.sendMessage("§cSend a message to any player globally.");

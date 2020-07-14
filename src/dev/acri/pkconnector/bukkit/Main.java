@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.10.3";
+    public static final String version = "0.10.8";
     private static Main instance;
     private Socket socket;
 
@@ -79,6 +79,8 @@ public class Main extends JavaPlugin {
         registerCommand("pklist", PKListCommand.class);
         registerCommand("pkservers", ConnectedServersCommand.class);
         registerCommand("togglegmsg", GlobalMessageToggle.class);
+        registerCommand("pkip", ParkourAddressCommand.class);
+        registerCommand("pkdiscord", ParkourDiscordCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -172,6 +174,7 @@ public class Main extends JavaPlugin {
                 "fuck", "shit", "blimey"));
         getConfig().addDefault("auto-update", true);
         getConfig().addDefault("community-announcements", true);
+        getConfig().addDefault("global-private-messages-enabled", true);
 
         getConfig().options().copyDefaults(true);
         saveConfig();

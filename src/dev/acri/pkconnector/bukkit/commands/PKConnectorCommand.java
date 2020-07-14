@@ -40,7 +40,7 @@ public class PKConnectorCommand implements TabCompleter, CommandExecutor {
                 } catch (IOException | InvalidConfigurationException e) {
                     e.printStackTrace();
                 }
-                sender.sendMessage("§6Reloading config...");
+                sender.sendMessage("§6Reloaded config!");
             }else if(args[0].equalsIgnoreCase("forceupdate")){
                 sender.sendMessage("§6Forcing a plugin update...");
                 Main.getInstance().updatePlugin();
