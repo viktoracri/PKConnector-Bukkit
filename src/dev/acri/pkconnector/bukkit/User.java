@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class User {
 
@@ -22,6 +23,8 @@ public class User {
 
     private long lastMessageTime = -1;
     private String lastMessage = "";
+
+    private List<UUID> ignoredPlayers = new ArrayList<>();
 
 
     public User(Player player){
@@ -139,5 +142,22 @@ public class User {
 
     public void setNextMessageNormalChat(boolean nextMessageNormalChat) {
         this.nextMessageNormalChat = nextMessageNormalChat;
+    }
+
+    public List<UUID> getIgnoredPlayers() {
+        return ignoredPlayers;
+    }
+
+    public void setIgnoredPlayers(String ignoredPlayers) {
+        for(String player : ignoredPlayers.split(";"))
+            this.ignoredPlayers.add(UUID.fromString(player));
+    }
+
+    @Deprecated
+    public boolean isIgnoring(UUID uuid){
+        for(UUID u : ignoredPlayers)
+            if(u.toString().equals(uuid.toString()))
+                return true;
+        return false;
     }
 }

@@ -27,13 +27,13 @@ public class ParkourAddressCommand implements TabCompleter, CommandExecutor {
             sender.sendMessage("§cGet the public IP address of a parkour server");
         }else {
 
-            StringBuilder server = new StringBuilder(args[0]);
+            StringBuilder server = new StringBuilder(args[0] + " ");
             for(int i = 1; i < args.length; i++)
-                server.append(args[i]);
-            System.out.println(server);
+                server.append(args[i]).append(" ");
+
             Main.getInstance().getPkConnector().sendData(0x1a, new String[]{
                     ((Player) sender).getUniqueId().toString(),
-                    server.toString()
+                    server.toString().substring(0, server.length() - 1)
             });
         }
 

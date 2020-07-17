@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.10.8";
+    public static final String version = "0.11.3";
     private static Main instance;
     private Socket socket;
 
@@ -81,6 +81,7 @@ public class Main extends JavaPlugin {
         registerCommand("togglegmsg", GlobalMessageToggle.class);
         registerCommand("pkip", ParkourAddressCommand.class);
         registerCommand("pkdiscord", ParkourDiscordCommand.class);
+        registerCommand("pkignore", ParkourIgnoreCommand.class);
 
         Bukkit.getPluginManager().registerEvents(new PlayerChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -107,6 +108,8 @@ public class Main extends JavaPlugin {
 
         });
         ex.shutdown();
+
+
 
         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             Plugin p = Bukkit.getPluginManager().getPlugin("PKConnectorReloader");
@@ -215,6 +218,7 @@ public class Main extends JavaPlugin {
         List<Object> data = new ArrayList<>();
         data.add(player.getName());
         data.add(message);
+        data.add(player.getUniqueId().toString());
 
         Main.getInstance().getPkConnector().sendData(0x6, data);
 

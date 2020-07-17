@@ -1,5 +1,5 @@
 name: PKConnector
-version: 0.10.8
+version: 0.11.3
 author: Viktoracri
 website: https://acri.dev
 main: dev.acri.pkconnector.bukkit.Main
@@ -37,3 +37,5 @@ commands:
     description: Get the public IP address of a parkour server
   pkdiscord:
     description: Get an invite to the pk community discord
+  pkignore:
+    description: Ignore a player across all parkour servers

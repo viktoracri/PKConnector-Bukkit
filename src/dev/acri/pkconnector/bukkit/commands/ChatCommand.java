@@ -3,6 +3,9 @@ package dev.acri.pkconnector.bukkit.commands;
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,7 +23,9 @@ public class ChatCommand implements TabCompleter, CommandExecutor {
             return true;
         }
 
+
         User u = Main.getInstance().getUser((Player) sender);
+
 
         if (!Main.getInstance().getConfig().getBoolean("global-chat-enabled"))
             if (!(u.isAccessVeteranChat() || u.isAccessStaffChat())) {

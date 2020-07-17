@@ -4,16 +4,21 @@ package dev.acri.pkconnector.bukkit.listener;
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.soap.Text;
 import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -161,6 +166,7 @@ public class ConnectionListener implements Runnable {
                         String identifier = in.readUTF();
                         String player = in.readUTF();
                         String message = in.readUTF().replaceAll("§", "&");
+                        String ignoringPlayers = in.readUTF();
                         String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
                                 .replaceAll("\\{server}", identifier)
                                 .replaceAll("\\{player}", player);
@@ -173,18 +179,30 @@ public class ConnectionListener implements Runnable {
                             if(Main.getInstance().getConfig().getStringList("bad-word-filter").contains(word.toLowerCase())) badwordBuilder.append(new String(new char[word.length()]).replace("\0", "*")).append(" ");
                             else badwordBuilder.append(word).append(" ");
 
+                        users:
                         for (User u : Main.getInstance().getUserList())
                             if (u.isGlobalChatEnabled()) {
+
+                                for(String ignoringPlayer : ignoringPlayers.split(";"))
+                                    if(ignoringPlayer.equals(u.getPlayer().getName())){
+//                                        TextComponent hoverMessage = new TextComponent("[IGNORED]");
+//                                        hoverMessage.setColor(net.md_5.bungee.api.ChatColor.DARK_GRAY);
+//                                        hoverMessage.setHoverEvent( new HoverEvent( HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(badwordBuilder.toString()).create()));
+//                                        TextComponent textComponent = new TextComponent(finalMessage.split("\\{message\\}")[0]);
+//                                        textComponent.addExtra(hoverMessage);
+//                                        if(finalMessage.contains("{message}"))textComponent.addExtra(new TextComponent(finalMessage.split("\\{message\\}")[1]));
+//                                        u.getPlayer().spigot().sendMessage(textComponent);
+
+                                        continue users;
+                                    }
 
                         /*
                                 Highlight names
                          */
                                 StringBuilder builder = new StringBuilder();
-                                boolean containsName = false;
                                 for(String word : badwordBuilder.toString().split(" "))
                                     if(word.equalsIgnoreCase(u.getPlayer().getName())) {
                                         builder.append("§e").append(word).append("§r ");
-                                        containsName = true;
                                     }
                                     else builder.append(word).append(" ");
 
@@ -214,6 +232,8 @@ public class ConnectionListener implements Runnable {
                             // u.setChatChannel(ChatChannel.get(in.readUTF()));
                             u.setGlobalChatSendBanned(in.readBoolean());
                             u.setPrivateMessagesEnabled(in.readBoolean());
+                            String ignoredPlayers = in.readUTF();
+                            if(ignoredPlayers.contains(";"))u.setIgnoredPlayers(ignoredPlayers);
                         }
                         break;
                     case 0x9: // Find results
@@ -293,6 +313,8 @@ public class ConnectionListener implements Runnable {
                             Bukkit.getPlayer(from).sendMessage("§cPlayer has disabled global private messages.");
                         }else if(type.equals("SERVER_DISABLED_PM")){
                             Bukkit.getPlayer(from).sendMessage("§cThe server the player is on has disabled global private messages.");
+                        }else if(type.equals("FROM_IGNORING")){
+                            Bukkit.getPlayer(from).sendMessage("§cYou are currently ignoring this player.");
                         }
 
                         break;
@@ -351,7 +373,7 @@ public class ConnectionListener implements Runnable {
                         message = in.readUTF();
                         if(Main.getInstance().getConfig().getBoolean("community-announcements")){
                             Bukkit.broadcastMessage(" ");
-                            Bukkit.broadcastMessage(" §8§l» §6§lGlobal Announcement §8§l» §e" + message.replaceAll("&", "§"));
+                            Bukkit.broadcastMessage(" §8§l» §6§lAnnouncement §8§l» §e" + message.replaceAll("&", "§"));
                             Bukkit.broadcastMessage("");
                         }
 
@@ -401,6 +423,7 @@ public class ConnectionListener implements Runnable {
                                 p.sendMessage("§6" + server + "§e ip address: §6" + (!ip.equals("") ? ip : "§cNot assigned"));
                             }
                         }
+                        break;
                 }
             }
 
