@@ -4,6 +4,7 @@ package dev.acri.pkconnector.bukkit.listener;
 import dev.acri.pkconnector.bukkit.ChatChannel;
 import dev.acri.pkconnector.bukkit.Main;
 import dev.acri.pkconnector.bukkit.User;
+import dev.acri.pkconnector.bukkit.events.GlobalChatReceivedEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -167,6 +168,15 @@ public class ConnectionListener implements Runnable {
                         String player = in.readUTF();
                         String message = in.readUTF().replaceAll("§", "&");
                         String ignoringPlayers = in.readUTF();
+                        String uuid = in.readUTF();
+
+                        GlobalChatReceivedEvent event = new GlobalChatReceivedEvent(UUID.fromString(uuid), player, identifier, message);
+                        Bukkit.getServer().getPluginManager().callEvent(event);
+
+                        if(event.isCancelled()){
+                            break;
+                        }
+
                         String finalMessage = Main.getInstance().getConfiguration().getString("ChatFormat.Global").replaceAll("&", "§")
                                 .replaceAll("\\{server}", identifier)
                                 .replaceAll("\\{player}", player);
@@ -218,25 +228,24 @@ public class ConnectionListener implements Runnable {
                         Bukkit.getConsoleSender().sendMessage("[Global Chat] " + finalMessage.replace("{message}", message));
 
                         break;
-                    case 0x7: // Player information
-                        String uuid = in.readUTF();
+                    case 0x7: { // Player information
+                        uuid = in.readUTF();
                         if (Bukkit.getPlayer(UUID.fromString(uuid)) != null) {
                             User u = Main.getInstance().getUser(UUID.fromString(uuid));
-                            if(Main.getInstance().getConfig().getBoolean("auto-disable-global-chat-on-join")) {
+                            if (Main.getInstance().getConfig().getBoolean("auto-disable-global-chat-on-join")) {
                                 u.setGlobalChatEnabled(false);
                                 in.readBoolean();
-                            }
-                            else u.setGlobalChatEnabled(in.readBoolean());
+                            } else u.setGlobalChatEnabled(in.readBoolean());
                             u.setAccessStaffChat(in.readBoolean());
                             u.setAccessVeteranChat(in.readBoolean());
                             // u.setChatChannel(ChatChannel.get(in.readUTF()));
                             u.setGlobalChatSendBanned(in.readBoolean());
                             u.setPrivateMessagesEnabled(in.readBoolean());
                             String ignoredPlayers = in.readUTF();
-                            if(ignoredPlayers.contains(";"))u.setIgnoredPlayers(ignoredPlayers);
+                            if (ignoredPlayers.contains(";")) u.setIgnoredPlayers(ignoredPlayers);
                         }
                         break;
-                    case 0x9: // Find results
+                    }case 0x9: // Find results
                         uuid = in.readUTF();
                         String target = in.readUTF();
                         String answer = in.readUTF();

@@ -1,6 +1,7 @@
 package dev.acri.pkconnector.bukkit;
 
 import dev.acri.pkconnector.bukkit.commands.*;
+import dev.acri.pkconnector.bukkit.events.GlobalChatSendEvent;
 import dev.acri.pkconnector.bukkit.listener.*;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
@@ -28,7 +29,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends JavaPlugin {
 
-    public static final String version = "0.11.3";
+    public static final String version = "0.11.3.1";
     private static Main instance;
     private Socket socket;
 
@@ -207,6 +208,13 @@ public class Main extends JavaPlugin {
             player.sendMessage("§cYou cannot say the same thing twice in a row.");
             return;
         }
+
+        GlobalChatSendEvent event = new GlobalChatSendEvent(player, message);
+
+        Bukkit.getServer().getPluginManager().callEvent(event);
+
+        if(event.isCancelled())
+            return;
 
 
 
